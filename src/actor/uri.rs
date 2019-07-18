@@ -5,6 +5,8 @@ use std::{
 };
 
 pub type ActorId = usize;
+
+#[cfg_attr(feature = "interact_support", derive(Interact))]
 pub struct ActorPath(Arc<String>);
 
 impl ActorPath {
@@ -57,6 +59,7 @@ impl Clone for ActorPath {
 /// Note: `host` is currently unused but will be utilized when
 /// networking and clustering are introduced.
 #[derive(Clone)]
+#[cfg_attr(feature = "interact_support", derive(Interact))]
 pub struct ActorUri {
     pub uid: ActorId,
     pub name: Arc<String>,

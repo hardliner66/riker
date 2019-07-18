@@ -17,7 +17,9 @@ use crate::{
 };
 
 #[derive(Clone)]
+#[cfg_attr(feature = "interact_support", derive(Interact))]
 pub struct KernelRef {
+    #[cfg_attr(feature = "interact_support", interact(skip))]
     pub tx: Sender<KernelMsg>,
 }
 

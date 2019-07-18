@@ -34,24 +34,31 @@ use crate::{
 };
 
 #[derive(Clone)]
+#[cfg_attr(feature = "interact_support", derive(Interact))]
 pub struct ActorCell {
     inner: Arc<ActorCellInner>,
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature = "interact_support", derive(Interact))]
 struct ActorCellInner {
     uid: ActorId,
     uri: ActorUri,
     parent: Option<BasicActorRef>,
     children: Children,
     is_remote: bool,
+    #[cfg_attr(feature = "interact_support", interact(skip))]
     is_terminating: Arc<AtomicBool>,
+    #[cfg_attr(feature = "interact_support", interact(skip))]
     is_restarting: Arc<AtomicBool>,
     // persistence: Persistence,
+    #[cfg_attr(feature = "interact_support", interact(skip))]
     status: Arc<AtomicUsize>,
     kernel: Option<KernelRef>,
     system: ActorSystem,
+    #[cfg_attr(feature = "interact_support", interact(skip))]
     mailbox: Arc<dyn AnySender>,
+    #[cfg_attr(feature = "interact_support", interact(skip))]
     sys_mailbox: MailboxSender<SystemMsg>,
 }
 
@@ -652,7 +659,9 @@ impl<Msg> Timer for Context<Msg>
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature = "interact_support", derive(Interact))]
 pub struct Children {
+    #[cfg_attr(feature = "interact_support", interact(skip))]
     actors: Arc<RwLock<HashMap<String, BasicActorRef>>>,
 }
 

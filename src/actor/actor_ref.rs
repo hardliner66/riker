@@ -136,6 +136,7 @@ impl<T: 'static> Clone for BoxedTell<T> {
 }
 
 #[derive(Clone)]
+#[cfg_attr(feature = "interact_support", derive(Interact))]
 pub struct BasicActorRef {
     pub cell: ActorCell,
 }

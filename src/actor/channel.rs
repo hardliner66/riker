@@ -282,6 +282,7 @@ impl Receive<Publish<SystemEvent>> for EventsChannel {
 pub type DLChannelMsg = ChannelMsg<DeadLetter>;
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "interact_support", derive(Interact))]
 pub struct DeadLetter {
     pub msg: String,
     pub sender: Sender,

@@ -1,31 +1,33 @@
 #![crate_name = "riker"]
 #![feature(
-        async_await,
-        await_macro,
-        arbitrary_self_types,
-        bind_by_move_pattern_guards
+async_await,
+await_macro,
+arbitrary_self_types,
+bind_by_move_pattern_guards
 )]
 
 // #![allow(warnings)] // toggle for easier compile error fixing 
 
+#[cfg(feature = "interact_support")]
+#[macro_use]
+extern crate interact;
 #[allow(unused_imports)]
 extern crate log;
+
+use std::any::Any;
+use std::env;
+use std::fmt;
+use std::fmt::Debug;
+
+use config::{Config, File};
+
+use crate::actor::BasicActorRef;
 
 mod validate;
 
 pub mod actor;
 pub mod kernel;
 pub mod system;
-
-use std::env;
-use std::fmt::Debug;
-use std::fmt;
-use std::any::Any;
-
-
-use config::{Config, File};
-
-use crate::actor::BasicActorRef;
 
 pub fn load_config() -> Config {
     let mut cfg = Config::new();
@@ -61,6 +63,7 @@ pub struct Envelope<T: Message> {
 unsafe impl<T: Message> Send for Envelope<T> {}
 
 pub trait Message: Debug + Clone + Send + 'static {}
+
 impl<T: Debug + Clone + Send + 'static> Message for T {}
 
 
@@ -72,10 +75,10 @@ pub struct AnyMessage {
 impl AnyMessage {
     pub fn new<T>(msg: T, one_time: bool) -> Self
         where T: Any + Message
-    {    
+    {
         AnyMessage {
             one_time,
-            msg: Some(Box::new(msg))
+            msg: Some(Box::new(msg)),
         }
     }
 
@@ -111,10 +114,10 @@ impl Debug for AnyMessage {
 }
 
 pub mod actors {
-    pub use crate::{Message, AnyMessage};
+    pub use crate::{AnyMessage, Message};
     pub use crate::actor::*;
     pub use crate::system::{
-        ActorSystem, SystemBuilder, SystemMsg,
-        SystemEvent, Run, Timer
+        ActorSystem, Run, SystemBuilder,
+        SystemEvent, SystemMsg, Timer,
     };
 }

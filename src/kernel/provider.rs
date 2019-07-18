@@ -19,10 +19,12 @@ use crate::{
 };
 
 #[derive(Clone)]
+#[cfg_attr(feature = "interact_support", derive(Interact))]
 pub struct Provider {
     inner: Arc<Mutex<ProviderInner>>,
 }
 
+#[cfg_attr(feature = "interact_support", derive(Interact))]
 struct ProviderInner {
     paths: HashSet<ActorPath>,
     counter: ActorId,
