@@ -678,12 +678,16 @@ fn sys_channels(prov: &Provider, sys: &ActorSystem) -> Result<SysChannels, Syste
 
 pub struct SystemSettings {
     pub msg_process_limit: u32,
+    pub queue_bound: u32,
+    pub system_queue_bound: u32,
 }
 
 impl<'a> From<&'a Config> for SystemSettings {
     fn from(config: &Config) -> Self {
         SystemSettings {
             msg_process_limit: config.get_int("mailbox.msg_process_limit").unwrap() as u32,
+            queue_bound: config.get_int("mailbox.queue_bound").unwrap() as u32,
+            system_queue_bound: config.get_int("mailbox.system_queue_bound").unwrap() as u32,
         }
     }
 }

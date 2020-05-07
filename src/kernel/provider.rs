@@ -61,7 +61,7 @@ impl Provider {
             host: sys.host(),
         };
 
-        let (sender, sys_sender, mb) = mailbox::<A::Msg>(sys.sys_settings().msg_process_limit);
+        let (sender, sys_sender, mb) = mailbox::<A::Msg>(sys.sys_settings().msg_process_limit, sys.sys_settings().queue_bound, sys.sys_settings().system_queue_bound);
 
         let cell = ExtendedCell::new(
             uri.uid,
@@ -126,7 +126,7 @@ fn root(sys: &ActorSystem) -> BasicActorRef {
         path: ActorPath::new("/"),
         host: Arc::new("localhost".to_string()),
     };
-    let (sender, sys_sender, _mb) = mailbox::<SystemMsg>(100);
+    let (sender, sys_sender, _mb) = mailbox::<SystemMsg>(100, sys.sys_settings().queue_bound, sys.sys_settings().system_queue_bound);
 
     // Big bang: all actors have a parent.
     // This means root also needs a parent.
@@ -152,7 +152,7 @@ fn root(sys: &ActorSystem) -> BasicActorRef {
 
     // root
     let props: BoxActorProd<Guardian> = Props::new_args::<Guardian, _>(("root".to_string(), sys.log()));
-    let (sender, sys_sender, mb) = mailbox::<SystemMsg>(100);
+    let (sender, sys_sender, mb) = mailbox::<SystemMsg>(100, sys.sys_settings().queue_bound, sys.sys_settings().system_queue_bound);
 
     let cell = ExtendedCell::new(
         uri.uid,
@@ -187,7 +187,7 @@ fn guardian(
     };
 
     let props: BoxActorProd<Guardian> = Props::new_args::<Guardian, _>((name.to_string(), sys.log()));
-    let (sender, sys_sender, mb) = mailbox::<SystemMsg>(100);
+    let (sender, sys_sender, mb) = mailbox::<SystemMsg>(100, sys.sys_settings().queue_bound, sys.sys_settings().system_queue_bound);
 
     let cell = ExtendedCell::new(
         uri.uid,

@@ -148,12 +148,14 @@ where
 
 pub fn mailbox<Msg>(
     msg_process_limit: u32,
+    queue_bound: u32,
+    system_queue_bound: u32,
 ) -> (MailboxSender<Msg>, MailboxSender<SystemMsg>, Mailbox<Msg>)
 where
     Msg: Message,
 {
-    let (qw, qr) = queue::<Msg>();
-    let (sqw, sqr) = queue::<SystemMsg>();
+    let (qw, qr) = queue::<Msg>(queue_bound as usize);
+    let (sqw, sqr) = queue::<SystemMsg>(system_queue_bound as usize);
 
     let scheduled = Arc::new(AtomicBool::new(false));
 

@@ -1,12 +1,33 @@
 use std::sync::{
-    mpsc::{channel, Receiver, Sender},
+    mpsc::{channel, sync_channel, Receiver, Sender, SyncSender, SendError},
     Mutex,
 };
 
+#[derive(Clone)]
+enum Channel<T> {
+    Bounded(SyncSender<T>),
+    Unbounded(Sender<T>),
+}
+
+impl<T> Channel<T> {
+    fn send(&self, t: T) -> Result<(), SendError<T>> {
+        match self {
+            Channel::Bounded(tx) => tx.send(t),
+            Channel::Unbounded(tx) => tx.send(t),
+        }
+    }
+}
+
 use crate::{Envelope, Message};
 
-pub fn queue<Msg: Message>() -> (QueueWriter<Msg>, QueueReader<Msg>) {
-    let (tx, rx) = channel::<Envelope<Msg>>();
+pub fn queue<Msg: Message>(bound: usize) -> (QueueWriter<Msg>, QueueReader<Msg>) {
+    let (tx, rx) = if bound > 0 {
+        let (tx, rx) = sync_channel::<Envelope<Msg>>(bound);
+        (Channel::Bounded(tx), rx)
+    } else {
+        let (tx, rx) = channel::<Envelope<Msg>>();
+        (Channel::Unbounded(tx), rx)
+    };
 
     let qw = QueueWriter { tx };
 
@@ -24,7 +45,7 @@ pub fn queue<Msg: Message>() -> (QueueWriter<Msg>, QueueReader<Msg>) {
 
 #[derive(Clone)]
 pub struct QueueWriter<Msg: Message> {
-    tx: Sender<Envelope<Msg>>,
+    tx: Channel<Envelope<Msg>>,
 }
 
 impl<Msg: Message> QueueWriter<Msg> {
