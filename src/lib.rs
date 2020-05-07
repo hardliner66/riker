@@ -29,7 +29,8 @@ pub fn load_config() -> Config {
     cfg.set_default("mailbox.msg_process_limit", 1000).unwrap();
     cfg.set_default("mailbox.queue_bound", 0).unwrap();
     cfg.set_default("mailbox.system_queue_bound", 0).unwrap();
-    cfg.set_default("dispatcher.pool_size", 4).unwrap();
+    cfg.set_default("dispatcher.pool_size", (num_cpus::get() * 2) as i64).unwrap();
+    cfg.set_default("dispatcher.stack_size", 0).unwrap();
     cfg.set_default("scheduler.frequency_millis", 50).unwrap();
 
     // load the system config
