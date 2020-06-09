@@ -58,7 +58,10 @@ impl SystemBuilder {
         let name = self.name.unwrap_or_else(|| "riker".to_string());
         let cfg = self.cfg.unwrap_or_else(load_config);
         let exec = self.exec.unwrap_or_else(|| default_exec(&cfg));
-        let log = self.log.unwrap_or_else(|| default_log(&cfg));
+        let log = self
+            .log
+            .map(|log| LoggingSystem::new(log, None))
+            .unwrap_or_else(|| default_log(&cfg));
 
         ActorSystem::create(name.as_ref(), exec, log, cfg)
     }
@@ -92,19 +95,45 @@ impl SystemBuilder {
     }
 }
 
+/// Holds fields related to logging system.
+#[derive(Clone)]
+pub struct LoggingSystem {
+    /// Logger
+    log: Logger,
+    /// Global logger guard
+    global_logger_guard: Option<GlobalLoggerGuard>,
+}
+
+impl LoggingSystem {
+    pub(crate) fn new(log: Logger, global_logger_guard: Option<GlobalLoggerGuard>) -> Self {
+        Self {
+            log,
+            global_logger_guard,
+        }
+    }
+}
+
+impl Deref for LoggingSystem {
+    type Target = Logger;
+
+    fn deref(&self) -> &Self::Target {
+        &self.log
+    }
+}
+
 /// The actor runtime and common services coordinator
 ///
 /// The `ActorSystem` provides a runtime on which actors are executed.
 /// It also provides common services such as channels, persistence
 /// and scheduling. The `ActorSystem` is the heart of a Riker application,
-/// starting serveral threads when it is created. Create only one instance
+/// starting several threads when it is created. Create only one instance
 /// of `ActorSystem` per application.
 #[allow(dead_code)]
 #[derive(Clone)]
 pub struct ActorSystem {
     proto: Arc<ProtoSystem>,
     sys_actors: Option<SysActors>,
-    log: Logger,
+    log: LoggingSystem,
     debug: bool,
     pub exec: ThreadPool,
     pub timer: TimerRef,
@@ -146,7 +175,7 @@ impl ActorSystem {
     fn create(
         name: &str,
         exec: ThreadPool,
-        log: Logger,
+        log: LoggingSystem,
         cfg: Config,
     ) -> Result<ActorSystem, SystemError> {
         validate_name(name).map_err(|_| SystemError::InvalidName(name.into()))?;
@@ -192,7 +221,12 @@ impl ActorSystem {
         sys.sys_channels = Some(sys_channels(&prov, &sys)?);
 
         // 5. start dead letter logger
-        let _dl_logger = sys_actor_of_args::<DeadLetterLogger, _>(&prov, &sys, "dl_logger", (sys.dead_letters().clone(), sys.log()))?;
+        let _dl_logger = sys_actor_of_args::<DeadLetterLogger, _>(
+            &prov,
+            &sys,
+            "dl_logger",
+            (sys.dead_letters().clone(), sys.log()),
+        )?;
 
         sys.complete_start();
 
@@ -238,24 +272,24 @@ impl ActorSystem {
     }
 
     pub fn print_tree(&self) {
-        fn print_node(sys: &ActorSystem, node: BasicActorRef, indent: &str) {
+        fn print_node(sys: &ActorSystem, node: &BasicActorRef, indent: &str) {
             if node.is_root() {
                 println!("{}", sys.name());
 
                 for actor in node.children() {
-                    print_node(sys, actor, "");
+                    print_node(sys, &actor, "");
                 }
             } else {
                 println!("{}└─ {}", indent, node.name());
 
                 for actor in node.children() {
-                    print_node(sys, actor, &(indent.to_string() + "   "));
+                    print_node(sys, &actor, &(indent.to_string() + "   "));
                 }
             }
         }
 
-        let root = self.sys_actors.as_ref().unwrap().root.clone();
-        print_node(self, root, "");
+        let root = &self.sys_actors.as_ref().unwrap().root;
+        print_node(self, &root, "");
     }
 
     /// Returns the system root's actor reference
@@ -295,8 +329,8 @@ impl ActorSystem {
     }
 
     /// Returns the `Config` used by the system
-    pub fn config(&self) -> Config {
-        self.proto.config.clone()
+    pub fn config(&self) -> &Config {
+        &self.proto.config
     }
 
     pub(crate) fn sys_settings(&self) -> &SystemSettings {
@@ -338,7 +372,7 @@ impl ActorSystem {
     }
 
     #[inline]
-    pub fn log(&self) -> Logger {
+    pub fn log(&self) -> LoggingSystem {
         self.log.clone()
     }
 
@@ -441,10 +475,7 @@ impl ActorRefFactory for &ActorSystem {
 }
 
 impl TmpActorRefFactory for ActorSystem {
-    fn tmp_actor_of_props<A>(
-        &self,
-        props: BoxActorProd<A>,
-    ) -> Result<ActorRef<A::Msg>, CreateError>
+    fn tmp_actor_of_props<A>(&self, props: BoxActorProd<A>) -> Result<ActorRef<A::Msg>, CreateError>
     where
         A: Actor,
     {
@@ -471,8 +502,12 @@ impl TmpActorRefFactory for ActorSystem {
         A: ActorFactoryArgs<Args>,
     {
         let name = format!("{}", rand::random::<u64>());
-        self.provider
-            .create_actor(Props::new_args::<A, _>(args), &name, &self.temp_root(), self)
+        self.provider.create_actor(
+            Props::new_args::<A, _>(args),
+            &name,
+            &self.temp_root(),
+            self,
+        )
     }
 }
 
@@ -481,7 +516,7 @@ impl ActorSelectionFactory for ActorSystem {
         let anchor = self.user_root();
         let (anchor, path_str) = if path.starts_with('/') {
             let anchor = self.user_root();
-            let anchor_path = format!("{}/", anchor.path().deref().clone());
+            let anchor_path = format!("{}/", anchor.path());
             let path = path.to_string().replace(&anchor_path, "");
 
             (anchor, path)
@@ -512,8 +547,7 @@ impl Run for ActorSystem {
         Fut: Future + Send + 'static,
         <Fut as Future>::Output: Send,
     {
-        let exec = self.exec.clone();
-        exec.spawn_with_handle(future)
+        self.exec.spawn_with_handle(future)
     }
 }
 

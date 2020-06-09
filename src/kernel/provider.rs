@@ -1,9 +1,9 @@
+use dashmap::DashMap;
 use slog::trace;
-use std::{
-    collections::HashSet,
-    sync::{Arc, Mutex},
-};
 
+use std::sync::{atomic::Ordering, Arc};
+
+use crate::system::system::LoggingSystem;
 use crate::{
     actor::actor_cell::{ActorCell, ExtendedCell},
     actor::*,
@@ -11,28 +11,28 @@ use crate::{
     system::{system::SysActors, ActorSystem, SystemMsg},
     validate::validate_name,
 };
-use slog::Logger;
 
 #[derive(Clone)]
 pub struct Provider {
-    inner: Arc<Mutex<ProviderInner>>,
-    log: Logger,
+    inner: Arc<ProviderInner>,
+    log: LoggingSystem,
 }
 
 struct ProviderInner {
-    paths: HashSet<ActorPath>,
-    counter: ActorId,
+    counter: AtomicActorId,
+    paths: DashMap<ActorPath, ()>,
 }
 
 impl Provider {
-    pub fn new(log: Logger) -> Self {
+    pub fn new(log: LoggingSystem) -> Self {
         let inner = ProviderInner {
-            paths: HashSet::new(),
-            counter: 100, // ActorIds start at 100
+            // ActorIds start at 100
+            counter: AtomicActorId::new(100),
+            paths: DashMap::new(),
         };
 
         Provider {
-            inner: Arc::new(Mutex::new(inner)),
+            inner: Arc::new(inner),
             log,
         }
     }
@@ -86,25 +86,22 @@ impl Provider {
     }
 
     fn register(&self, path: &ActorPath) -> Result<ActorId, CreateError> {
-        match self.inner.lock() {
-            Ok(mut inner) => {
-                if inner.paths.contains(path) {
-                    return Err(CreateError::AlreadyExists(path.clone()));
-                }
-
-                inner.paths.insert(path.clone());
-                let id = inner.counter;
-                inner.counter += 1;
-
+        if self.inner.paths.contains_key(path) {
+            Err(CreateError::AlreadyExists(path.clone()))
+        } else {
+            let old = self.inner.paths.replace(path.clone(), ());
+            if let Some(old) = old {
+                self.inner.paths.replace(old.key().clone(), ());
+                Err(CreateError::AlreadyExists(path.clone()))
+            } else {
+                let id = self.inner.counter.fetch_add(1, Ordering::SeqCst);
                 Ok(id)
             }
-            Err(_) => Err(CreateError::System),
         }
     }
 
     pub fn unregister(&self, path: &ActorPath) {
-        let mut inner = self.inner.lock().unwrap();
-        inner.paths.remove(path);
+        self.inner.paths.remove(path);
     }
 }
 
@@ -112,10 +109,10 @@ pub fn create_root(sys: &ActorSystem) -> SysActors {
     let root = root(sys);
 
     SysActors {
-        root: root.clone(),
         user: guardian(1, "user", "/user", &root, sys),
         sysm: guardian(2, "system", "/system", &root, sys),
         temp: guardian(3, "temp", "/temp", &root, sys),
+        root,
     }
 }
 
@@ -211,11 +208,11 @@ fn guardian(
 
 struct Guardian {
     name: String,
-    log: Logger,
+    log: LoggingSystem,
 }
 
-impl ActorFactoryArgs<(String, Logger)> for Guardian {
-    fn create_args((name, log): (String, Logger)) -> Self {
+impl ActorFactoryArgs<(String, LoggingSystem)> for Guardian {
+    fn create_args((name, log): (String, LoggingSystem)) -> Self {
         Guardian { name, log }
     }
 }
