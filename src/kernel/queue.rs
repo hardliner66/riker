@@ -1,83 +1,39 @@
-use std::{
-    sync::{
-        mpsc::{channel, sync_channel, Receiver, Sender, SyncSender /* , SendError */},
-        Mutex,
-    }
-};
+use std::sync::Mutex;
+
+#[cfg(not(feature = "use_flume"))]
+use std::sync::mpsc::{channel, sync_channel, Receiver, Sender, SyncSender, SendError };
+
+#[cfg(feature = "use_flume")]
+use flume::{Sender, Receiver};
 
 use crate::{Envelope, Message};
 
 #[derive(Clone)]
+#[cfg(not(feature = "use_flume"))]
 enum Channel<T: Message> {
     Bounded(SyncSender<T>),
     Unbounded(Sender<T>),
-    Flume(flume::Sender<T>),
 }
 
+#[cfg(not(feature = "use_flume"))]
 impl<T: Message> Channel<T> {
-    fn send(&self, t: T) -> Result<(), EnqueueError<T>> {
+    fn send(&self, t: T) -> Result<(), SendError<T>> {
         match self {
-            Channel::Bounded(tx) => tx.send(t).map_err(|e| EnqueueError { msg: e.0 }),
-            Channel::Unbounded(tx) => tx.send(t).map_err(|e| EnqueueError { msg: e.0 }),
-            Channel::Flume(tx) => tx.send(t).map_err(|e| EnqueueError { msg: e.0 }),
+            Channel::Bounded(tx) => tx.send(t),
+            Channel::Unbounded(tx) => tx.send(t),
         }
     }
 }
 
-enum ChannelRecv<T: Message> {
-    Std(Receiver<T>),
-    Flume(flume::Receiver<T>),
-}
-
-#[derive(Debug)]
-enum RecvError {
-    Std(std::sync::mpsc::RecvError),
-    Flume(flume::RecvError),
-}
-
-#[derive(Debug)]
-enum TryRecvError {
-    Std(std::sync::mpsc::TryRecvError),
-    Flume(flume::TryRecvError),
-}
-
-impl<T: Message> ChannelRecv<T> {
-    fn recv(&self) -> Result<T, RecvError> {
-        match self {
-            ChannelRecv::Std(r) => r.recv().map_err(|e| RecvError::Std(e)),
-            ChannelRecv::Flume(r) => r.recv().map_err(|e| RecvError::Flume(e)),
-        }
-    }
-    fn try_recv(&self) -> Result<T, TryRecvError> {
-        match self {
-            ChannelRecv::Std(r) => r.try_recv().map_err(|e| TryRecvError::Std(e)),
-            ChannelRecv::Flume(r) => r.try_recv().map_err(|e| TryRecvError::Flume(e)),
-        }
-    }
-}
-
+#[cfg(feature = "use_flume")]
 pub fn queue<Msg: Message>(bound: usize) -> (QueueWriter<Msg>, QueueReader<Msg>) {
+    let (tx, rx) = if bound > 0 {
+        let (tx, rx) = flume::bounded::<Envelope<Msg>>(bound);
 
-    let use_flume = false;
-
-    let (tx, rx) = if use_flume {
-        if bound > 0 {
-            let (tx, rx) = flume::bounded::<Envelope<Msg>>(bound);
-
-            (Channel::Flume(tx), ChannelRecv::Flume(rx))
-        } else {
-            let (tx, rx) = flume::unbounded::<Envelope<Msg>>();
-            (Channel::Flume(tx), ChannelRecv::Flume(rx))
-        }
+        (tx, rx)
     } else {
-        if bound > 0 {
-            let (tx, rx) = sync_channel::<Envelope<Msg>>(bound);
-
-            (Channel::Bounded(tx), ChannelRecv::Std(rx))
-        } else {
-            let (tx, rx) = channel::<Envelope<Msg>>();
-            (Channel::Unbounded(tx), ChannelRecv::Std(rx))
-        }
+        let (tx, rx) = flume::unbounded::<Envelope<Msg>>();
+        (tx, rx)
     };
 
     let qw = QueueWriter { tx };
@@ -94,9 +50,41 @@ pub fn queue<Msg: Message>(bound: usize) -> (QueueWriter<Msg>, QueueReader<Msg>)
     (qw, qr)
 }
 
+#[cfg(not(feature = "use_flume"))]
+pub fn queue<Msg: Message>(bound: usize) -> (QueueWriter<Msg>, QueueReader<Msg>) {
+    let (tx, rx) = if bound > 0 {
+        let (tx, rx) = sync_channel::<Envelope<Msg>>(bound);
+
+        (Channel::Bounded(tx), rx)
+    } else {
+        let (tx, rx) = channel::<Envelope<Msg>>();
+        (Channel::Unbounded(tx), rx)
+    };
+
+    let qw = QueueWriter { tx };
+
+    let qr = QueueReaderInner {
+        rx,
+        next_item: None,
+    };
+
+    let qr = QueueReader {
+        inner: Mutex::new(qr),
+    };
+
+    (qw, qr)
+}
+
+#[cfg(not(feature = "use_flume"))]
 #[derive(Clone)]
 pub struct QueueWriter<Msg: Message> {
     tx: Channel<Envelope<Msg>>,
+}
+
+#[cfg(feature = "use_flume")]
+#[derive(Clone)]
+pub struct QueueWriter<Msg: Message> {
+    tx: Sender<Envelope<Msg>>,
 }
 
 impl<Msg: Message> QueueWriter<Msg> {
@@ -104,7 +92,7 @@ impl<Msg: Message> QueueWriter<Msg> {
         self.tx
             .send(msg)
             .map(|_| ())
-            // .map_err(|e| EnqueueError { msg: e.0 })
+            .map_err(|e| EnqueueError { msg: e.0 })
     }
 }
 
@@ -113,7 +101,7 @@ pub struct QueueReader<Msg: Message> {
 }
 
 struct QueueReaderInner<Msg: Message> {
-    rx: ChannelRecv<Envelope<Msg>>,
+    rx: Receiver<Envelope<Msg>>,
     next_item: Option<Envelope<Msg>>,
 }
 
