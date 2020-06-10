@@ -12,5 +12,5 @@ pub enum KernelMsg {
     TerminateActor,
     RestartActor,
     RunActor,
-    Sys(ActorSystem),
+    // Sys(ActorSystem),
 }
