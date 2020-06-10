@@ -5,21 +5,6 @@ use std::{
     }
 };
 
-#[derive(Clone)]
-enum Channel<T> {
-    Bounded(SyncSender<T>),
-    Unbounded(Sender<T>),
-}
-
-impl<T> Channel<T> {
-    fn send(&self, t: T) -> Result<(), SendError<T>> {
-        match self {
-            Channel::Bounded(tx) => tx.send(t),
-            Channel::Unbounded(tx) => tx.send(t),
-        }
-    }
-}
-
 use crate::{Envelope, Message};
 
 #[derive(Clone)]
