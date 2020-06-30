@@ -1,6 +1,9 @@
 #![crate_name = "riker"]
-
-// #![allow(warnings)] // toggle for easier compile error fixing
+#![deny(clippy::all)]
+// #![deny(clippy::pedantic)]
+// #![deny(clippy::nursery)]
+#![allow(clippy::new_ret_no_self)]
+#![allow(clippy::large_enum_variant)]
 
 mod validate;
 
@@ -67,7 +70,7 @@ impl AnyMessage {
     where
         T: Any + Message,
     {
-        AnyMessage {
+        Self {
             one_time,
             msg: Some(Box::new(msg)),
         }
@@ -90,7 +93,7 @@ impl AnyMessage {
             }
         } else {
             match self.msg.as_ref() {
-                Some(ref m) if m.is::<T>() => Ok(m.downcast_ref::<T>().cloned().unwrap()),
+                Some(m) if m.is::<T>() => Ok(m.downcast_ref::<T>().cloned().unwrap()),
                 Some(_) => Err(()),
                 None => Err(()),
             }
@@ -112,6 +115,6 @@ impl Debug for AnyMessage {
 
 pub mod actors {
     pub use crate::actor::*;
-    pub use crate::system::{ActorSystem, Run, SystemBuilder, SystemEvent, SystemMsg, Timer};
+    pub use crate::system::{ActorSystem, Run, SystemBuilder, SystemEvent, SystemMsg, Timer, ScheduleId};
     pub use crate::{AnyMessage, Message};
 }

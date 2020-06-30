@@ -10,8 +10,8 @@ use crate::{
     actor::actor_cell::ExtendedCell,
     actor::*,
     kernel::{
-        kernel::Dock,
         queue::{queue, EnqueueResult, QueueEmpty, QueueReader, QueueWriter},
+        Dock,
     },
     system::ActorCreated,
     system::{ActorSystem, SystemEvent, SystemMsg},
@@ -295,10 +295,6 @@ fn handle_init<A>(
         );
     }
 
-    // if persistence is not configured then set as not suspended
-    // if cell.load_events(actor) {
-    //     mbox.set_suspended(false);
-    // }
     actor.as_mut().unwrap().post_start(ctx);
 }
 
