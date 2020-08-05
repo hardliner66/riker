@@ -73,6 +73,8 @@ where
     let actor_ref = ActorRef::new(cell);
 
     let f = async move {
+        optick::register_thread("kernel::future");
+        optick::event!("kernel::future");
         while let Some(msg) = rx.next().await {
             match msg {
                 KernelMsg::RunActor => {

@@ -43,6 +43,8 @@ impl KernelRef {
         let mut tx = self.tx.clone();
         sys.exec
             .spawn(async move {
+                optick::register_thread("KernelRef::send::future");
+                optick::event!("KernelRef::send::future");
                 drop(tx.send(msg).await);
             })
             .unwrap();

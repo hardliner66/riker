@@ -128,8 +128,8 @@ where
         (**self).is_child(actor)
     }
 
-    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     /// Iterator over children references.
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn children<'a>(&'a self) -> Box<dyn Iterator<Item = BasicActorRef> + 'a> {
         (**self).children()
     }
@@ -277,8 +277,8 @@ impl ActorReference for BasicActorRef {
         self.cell.is_child(actor)
     }
 
-    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     /// Iterator over children references.
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn children<'a>(&'a self) -> Box<dyn Iterator<Item = BasicActorRef> + 'a> {
         self.cell.children()
     }
@@ -523,8 +523,8 @@ impl<Msg: Message> ActorReference for &ActorRef<Msg> {
         self.cell.is_root()
     }
 
-    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     /// Parent reference.
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn parent(&self) -> BasicActorRef {
         self.cell.parent()
     }

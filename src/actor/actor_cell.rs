@@ -433,6 +433,7 @@ where
         self.cell.send_sys_msg(msg)
     }
 
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn system(&self) -> &ActorSystem {
         &self.cell.inner.system
     }
@@ -492,8 +493,8 @@ impl<Msg> Context<Msg>
 where
     Msg: Message,
 {
-    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     /// Returns the `ActorRef` of the current actor.
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn myself(&self) -> ActorRef<Msg> {
         self.myself.clone()
     }

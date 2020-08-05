@@ -420,12 +420,12 @@ impl ActorSystem {
             .num_seconds() as u64
     }
 
-    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     /// Returns the hostname used when the system started
     ///
     /// The host is used in actor addressing.
     ///
     /// Currently not used, but will be once system clustering is introduced.
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn host(&self) -> Arc<String> {
         self.proto.host.clone()
     }
@@ -436,14 +436,15 @@ impl ActorSystem {
         self.proto.id
     }
 
-    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     /// Returns the name of the system
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn name(&self) -> String {
         self.proto.name.clone()
     }
 
     #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn print_tree(&self) {
+        #[cfg_attr(feature = "profiling", optick_attr::profile)]
         fn print_node(sys: &ActorSystem, node: &BasicActorRef, indent: &str) {
             if node.is_root() {
                 println!("{}", sys.name());
@@ -740,13 +741,27 @@ pub trait Run {
 }
 
 impl Run for ActorSystem {
-    #[cfg_attr(feature = "profiling", optick_attr::profile)]
+    #[cfg(not(feature = "profiling"))]
     fn run<Fut>(&self, future: Fut) -> Result<RemoteHandle<<Fut as Future>::Output>, SpawnError>
     where
         Fut: Future + Send + 'static,
         <Fut as Future>::Output: Send,
     {
         self.exec.spawn_with_handle(future)
+    }
+
+    #[cfg(feature = "profiling")]
+    #[optick_attr::profile]
+    fn run<Fut>(&self, future: Fut) -> Result<RemoteHandle<<Fut as Future>::Output>, SpawnError>
+    where
+        Fut: Future + Send + 'static,
+        <Fut as Future>::Output: Send,
+    {
+        self.exec.spawn_with_handle({
+            optick::register_thread("<ActorSystem as Run>::future");
+            optick::event!("<ActorSystem as Run>::future");
+            future
+        })
     }
 }
 
