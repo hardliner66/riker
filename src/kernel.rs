@@ -38,7 +38,7 @@ pub struct Dock<A: Actor> {
 }
 
 impl<A: Actor> Clone for Dock<A> {
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn clone(&self) -> Dock<A> {
         Dock {
             actor: self.actor.clone(),
@@ -47,7 +47,7 @@ impl<A: Actor> Clone for Dock<A> {
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(mailbox)))]
+#[cfg_attr(feature = "profiling", optick_attr::profile)]
 pub fn kernel<A>(
     props: BoxActorProd<A>,
     cell: ExtendedCell<A::Msg>,
@@ -104,7 +104,7 @@ where
     Ok(kr)
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(dock)))]
+#[cfg_attr(feature = "profiling", optick_attr::profile)]
 fn restart_actor<A>(
     dock: &Dock<A>,
     actor_ref: BasicActorRef,
@@ -126,7 +126,7 @@ fn restart_actor<A>(
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(mbox)))]
+#[cfg_attr(feature = "profiling", optick_attr::profile)]
 fn terminate_actor<Msg>(mbox: &Mailbox<Msg>, actor_ref: BasicActorRef, sys: &ActorSystem)
 where
     Msg: Message,
@@ -146,7 +146,7 @@ where
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument)]
+#[cfg_attr(feature = "profiling", optick_attr::profile)]
 fn start_actor<A>(props: &BoxActorProd<A>) -> Result<A, CreateError>
 where
     A: Actor,

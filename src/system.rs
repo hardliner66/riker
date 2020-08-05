@@ -25,7 +25,7 @@ pub enum SystemCmd {
 }
 
 impl Into<SystemMsg> for SystemCmd {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn into(self) -> SystemMsg {
         SystemMsg::Command(self)
     }
@@ -44,7 +44,7 @@ pub enum SystemEvent {
 }
 
 impl Into<SystemMsg> for SystemEvent {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn into(self) -> SystemMsg {
         SystemMsg::Event(self)
     }
@@ -66,42 +66,42 @@ pub struct ActorTerminated {
 }
 
 impl Into<SystemEvent> for ActorCreated {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn into(self) -> SystemEvent {
         SystemEvent::ActorCreated(self)
     }
 }
 
 impl Into<SystemEvent> for ActorRestarted {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn into(self) -> SystemEvent {
         SystemEvent::ActorRestarted(self)
     }
 }
 
 impl Into<SystemEvent> for ActorTerminated {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn into(self) -> SystemEvent {
         SystemEvent::ActorTerminated(self)
     }
 }
 
 impl Into<SystemMsg> for ActorCreated {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn into(self) -> SystemMsg {
         SystemMsg::Event(SystemEvent::ActorCreated(self))
     }
 }
 
 impl Into<SystemMsg> for ActorRestarted {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn into(self) -> SystemMsg {
         SystemMsg::Event(SystemEvent::ActorRestarted(self))
     }
 }
 
 impl Into<SystemMsg> for ActorTerminated {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn into(self) -> SystemMsg {
         SystemMsg::Event(SystemEvent::ActorTerminated(self))
     }
@@ -120,7 +120,7 @@ pub enum SystemError {
 }
 
 impl Error for SystemError {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn description(&self) -> &str {
         match *self {
             SystemError::ModuleFailed(_) => {
@@ -134,7 +134,7 @@ impl Error for SystemError {
 }
 
 impl fmt::Display for SystemError {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             SystemError::ModuleFailed(ref m) => {
@@ -148,7 +148,7 @@ impl fmt::Display for SystemError {
 }
 
 impl fmt::Debug for SystemError {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(&self.to_string())
     }
@@ -203,12 +203,12 @@ pub struct SystemBuilder {
 }
 
 impl SystemBuilder {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn new() -> Self {
         SystemBuilder::default()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn create(self) -> Result<ActorSystem, SystemError> {
         let name = self.name.unwrap_or_else(|| "riker".to_string());
         let cfg = self.cfg.unwrap_or_else(load_config);
@@ -221,7 +221,7 @@ impl SystemBuilder {
         ActorSystem::create(name.as_ref(), exec, log, cfg)
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn name(self, name: &str) -> Self {
         SystemBuilder {
             name: Some(name.to_string()),
@@ -229,7 +229,7 @@ impl SystemBuilder {
         }
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn cfg(self, cfg: Config) -> Self {
         SystemBuilder {
             cfg: Some(cfg),
@@ -237,7 +237,7 @@ impl SystemBuilder {
         }
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn exec(self, exec: ThreadPool) -> Self {
         SystemBuilder {
             exec: Some(exec),
@@ -245,7 +245,7 @@ impl SystemBuilder {
         }
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn log(self, log: Logger) -> Self {
         SystemBuilder {
             log: Some(log),
@@ -264,7 +264,7 @@ pub struct LoggingSystem {
 }
 
 impl LoggingSystem {
-    #[cfg_attr(feature = "profiling", instrument(skip(global_logger_guard)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub(crate) fn new(log: Logger, global_logger_guard: Option<GlobalLoggerGuard>) -> Self {
         Self {
             log,
@@ -276,7 +276,7 @@ impl LoggingSystem {
 impl Deref for LoggingSystem {
     type Target = Logger;
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn deref(&self) -> &Self::Target {
         &self.log
     }
@@ -306,7 +306,7 @@ impl ActorSystem {
     /// Create a new `ActorSystem` instance
     ///
     /// Requires a type that implements the `Model` trait.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn new() -> Result<ActorSystem, SystemError> {
         let cfg = load_config();
         let exec = default_exec(&cfg);
@@ -318,7 +318,7 @@ impl ActorSystem {
     /// Create a new `ActorSystem` instance with provided name
     ///
     /// Requires a type that implements the `Model` trait.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn with_name(name: &str) -> Result<ActorSystem, SystemError> {
         let cfg = load_config();
         let exec = default_exec(&cfg);
@@ -328,7 +328,7 @@ impl ActorSystem {
     }
 
     /// Create a new `ActorSystem` instance bypassing default config behavior
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn with_config(name: &str, cfg: Config) -> Result<ActorSystem, SystemError> {
         let exec = default_exec(&cfg);
         let log = default_log(&cfg);
@@ -336,7 +336,7 @@ impl ActorSystem {
         ActorSystem::create(name, exec, log, cfg)
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(log)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn create(
         name: &str,
         exec: ThreadPool,
@@ -400,18 +400,18 @@ impl ActorSystem {
         Ok(sys)
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn complete_start(&self) {
         self.sys_actors.as_ref().unwrap().user.sys_init(self);
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     /// Returns the system start date
     pub fn start_date(&self) -> &DateTime<Utc> {
         &self.proto.started_at
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     /// Returns the number of seconds since the system started
     pub fn uptime(&self) -> u64 {
         let now = Utc::now();
@@ -420,7 +420,7 @@ impl ActorSystem {
             .num_seconds() as u64
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     /// Returns the hostname used when the system started
     ///
     /// The host is used in actor addressing.
@@ -430,19 +430,19 @@ impl ActorSystem {
         self.proto.host.clone()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     /// Returns the UUID assigned to the system
     pub fn id(&self) -> Uuid {
         self.proto.id
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     /// Returns the name of the system
     pub fn name(&self) -> String {
         self.proto.name.clone()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn print_tree(&self) {
         fn print_node(sys: &ActorSystem, node: &BasicActorRef, indent: &str) {
             if node.is_root() {
@@ -466,60 +466,60 @@ impl ActorSystem {
 
     /// Returns the system root's actor reference
     #[allow(dead_code)]
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn root(&self) -> &BasicActorRef {
         &self.sys_actors.as_ref().unwrap().root
     }
 
     /// Returns the user root actor reference
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn user_root(&self) -> &BasicActorRef {
         &self.sys_actors.as_ref().unwrap().user
     }
 
     /// Returns the system root actor reference
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn sys_root(&self) -> &BasicActorRef {
         &self.sys_actors.as_ref().unwrap().sysm
     }
 
     /// Returns the temp root actor reference
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn temp_root(&self) -> &BasicActorRef {
         &self.sys_actors.as_ref().unwrap().temp
     }
 
     /// Returns a reference to the system events channel
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn sys_events(&self) -> &ActorRef<ChannelMsg<SystemEvent>> {
         &self.sys_channels.as_ref().unwrap().sys_events
     }
 
     /// Returns a reference to the dead letters channel
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn dead_letters(&self) -> &ActorRef<DLChannelMsg> {
         &self.sys_channels.as_ref().unwrap().dead_letters
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn publish_event(&self, evt: SystemEvent) {
         let topic = Topic::from(&evt);
         self.sys_events().tell(Publish { topic, msg: evt }, None);
     }
 
     /// Returns the `Config` used by the system
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn config(&self) -> &Config {
         &self.proto.config
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub(crate) fn sys_settings(&self) -> &SystemSettings {
         &self.proto.sys_settings
     }
 
     /// Create an actor under the system root
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn sys_actor_of_props<A>(
         &self,
         name: &str,
@@ -532,7 +532,7 @@ impl ActorSystem {
             .create_actor(props, name, &self.sys_root(), self)
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn sys_actor_of<A>(&self, name: &str) -> Result<ActorRef<<A as Actor>::Msg>, CreateError>
     where
         A: ActorFactory,
@@ -541,7 +541,7 @@ impl ActorSystem {
             .create_actor(Props::new::<A>(), name, &self.sys_root(), self)
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(args)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn sys_actor_of_args<A, Args>(
         &self,
         name: &str,
@@ -556,7 +556,7 @@ impl ActorSystem {
     }
 
     #[inline]
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn log(&self) -> LoggingSystem {
         self.log.clone()
     }
@@ -568,7 +568,7 @@ impl ActorSystem {
     ///
     /// Does not block. Returns a future which is completed when all
     /// actors have successfully stopped.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn shutdown(&self) -> Shutdown {
         let (tx, rx) = oneshot::channel::<()>();
         let tx = Arc::new(Mutex::new(Some(tx)));
@@ -583,7 +583,7 @@ unsafe impl Send for ActorSystem {}
 unsafe impl Sync for ActorSystem {}
 
 impl ActorRefFactory for ActorSystem {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn actor_of_props<A>(
         &self,
         name: &str,
@@ -596,7 +596,7 @@ impl ActorRefFactory for ActorSystem {
             .create_actor(props, name, &self.user_root(), self)
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn actor_of<A>(&self, name: &str) -> Result<ActorRef<<A as Actor>::Msg>, CreateError>
     where
         A: ActorFactory,
@@ -605,7 +605,7 @@ impl ActorRefFactory for ActorSystem {
             .create_actor(Props::new::<A>(), name, &self.user_root(), self)
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(args)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn actor_of_args<A, Args>(
         &self,
         name: &str,
@@ -619,14 +619,14 @@ impl ActorRefFactory for ActorSystem {
             .create_actor(Props::new_args::<A, _>(args), name, &self.user_root(), self)
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(actor)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn stop(&self, actor: impl ActorReference) {
         actor.sys_tell(SystemCmd::Stop.into());
     }
 }
 
 impl ActorRefFactory for &ActorSystem {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn actor_of_props<A>(
         &self,
         name: &str,
@@ -639,7 +639,7 @@ impl ActorRefFactory for &ActorSystem {
             .create_actor(props, name, &self.user_root(), self)
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn actor_of<A>(&self, name: &str) -> Result<ActorRef<<A as Actor>::Msg>, CreateError>
     where
         A: ActorFactory,
@@ -648,7 +648,7 @@ impl ActorRefFactory for &ActorSystem {
             .create_actor(Props::new::<A>(), name, &self.user_root(), self)
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(args)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn actor_of_args<A, Args>(
         &self,
         name: &str,
@@ -662,14 +662,14 @@ impl ActorRefFactory for &ActorSystem {
             .create_actor(Props::new_args::<A, _>(args), name, &self.user_root(), self)
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(actor)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn stop(&self, actor: impl ActorReference) {
         actor.sys_tell(SystemCmd::Stop.into());
     }
 }
 
 impl TmpActorRefFactory for ActorSystem {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn tmp_actor_of_props<A>(&self, props: BoxActorProd<A>) -> Result<ActorRef<A::Msg>, CreateError>
     where
         A: Actor,
@@ -679,7 +679,7 @@ impl TmpActorRefFactory for ActorSystem {
             .create_actor(props, &name, &self.temp_root(), self)
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn tmp_actor_of<A>(&self) -> Result<ActorRef<<A as Actor>::Msg>, CreateError>
     where
         A: ActorFactory,
@@ -689,7 +689,7 @@ impl TmpActorRefFactory for ActorSystem {
             .create_actor(Props::new::<A>(), &name, &self.temp_root(), self)
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(args)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn tmp_actor_of_args<A, Args>(
         &self,
         args: Args,
@@ -709,7 +709,7 @@ impl TmpActorRefFactory for ActorSystem {
 }
 
 impl ActorSelectionFactory for ActorSystem {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn select(&self, path: &str) -> Result<ActorSelection, InvalidPath> {
         let anchor = self.user_root();
         let (anchor, path_str) = if path.starts_with('/') {
@@ -740,7 +740,7 @@ pub trait Run {
 }
 
 impl Run for ActorSystem {
-    #[cfg_attr(feature = "profiling", instrument(skip(future)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn run<Fut>(&self, future: Fut) -> Result<RemoteHandle<<Fut as Future>::Output>, SpawnError>
     where
         Fut: Future + Send + 'static,
@@ -751,7 +751,7 @@ impl Run for ActorSystem {
 }
 
 impl fmt::Debug for ActorSystem {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -764,7 +764,7 @@ impl fmt::Debug for ActorSystem {
 }
 
 impl Timer for ActorSystem {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn schedule<T, M>(
         &self,
         initial_delay: Duration,
@@ -793,7 +793,7 @@ impl Timer for ActorSystem {
         id
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn schedule_once<T, M>(
         &self,
         delay: Duration,
@@ -820,7 +820,7 @@ impl Timer for ActorSystem {
         id
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn schedule_at_time<T, M>(
         &self,
         time: DateTime<Utc>,
@@ -850,7 +850,7 @@ impl Timer for ActorSystem {
         id
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn cancel_schedule(&self, id: Uuid) {
         let _ = self.timer.send(Job::Cancel(id));
     }
@@ -858,7 +858,7 @@ impl Timer for ActorSystem {
 
 // helper functions
 #[allow(unused)]
-#[cfg_attr(feature = "profiling", instrument(skip(prov)))]
+#[cfg_attr(feature = "profiling", optick_attr::profile)]
 fn sys_actor_of_props<A>(
     prov: &Provider,
     sys: &ActorSystem,
@@ -872,7 +872,7 @@ where
         .map_err(|_| SystemError::ModuleFailed(name.into()))
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(prov)))]
+#[cfg_attr(feature = "profiling", optick_attr::profile)]
 fn sys_actor_of<A>(
     prov: &Provider,
     sys: &ActorSystem,
@@ -886,7 +886,7 @@ where
 }
 
 #[allow(dead_code)]
-#[cfg_attr(feature = "profiling", instrument(skip(prov, args)))]
+#[cfg_attr(feature = "profiling", optick_attr::profile)]
 fn sys_actor_of_args<A, Args>(
     prov: &Provider,
     sys: &ActorSystem,
@@ -901,7 +901,7 @@ where
         .map_err(|_| SystemError::ModuleFailed(name.into()))
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(prov)))]
+#[cfg_attr(feature = "profiling", optick_attr::profile)]
 fn sys_channels(prov: &Provider, sys: &ActorSystem) -> Result<SysChannels, SystemError> {
     let sys_events = sys_actor_of::<EventsChannel>(prov, sys, "sys_events")?;
     let dead_letters = sys_actor_of::<Channel<DeadLetter>>(prov, sys, "dead_letters")?;
@@ -923,7 +923,7 @@ pub struct SystemSettings {
 }
 
 impl<'a> From<&'a Config> for SystemSettings {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn from(config: &Config) -> Self {
         SystemSettings {
             msg_process_limit: config.get_int("mailbox.msg_process_limit").unwrap() as u32,
@@ -937,7 +937,7 @@ struct ThreadPoolConfig {
 }
 
 impl<'a> From<&'a Config> for ThreadPoolConfig {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn from(config: &Config) -> Self {
         ThreadPoolConfig {
             pool_size: config.get_int("dispatcher.pool_size").unwrap() as usize,
@@ -946,7 +946,7 @@ impl<'a> From<&'a Config> for ThreadPoolConfig {
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument)]
+#[cfg_attr(feature = "profiling", optick_attr::profile)]
 fn default_exec(cfg: &Config) -> ThreadPool {
     let exec_cfg = ThreadPoolConfig::from(cfg);
     ThreadPoolBuilder::new()
@@ -979,14 +979,14 @@ struct ShutdownActor {
 }
 
 impl ActorFactoryArgs<Arc<Mutex<Option<oneshot::Sender<()>>>>> for ShutdownActor {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn create_args(tx: Arc<Mutex<Option<oneshot::Sender<()>>>>) -> Self {
         ShutdownActor::new(tx)
     }
 }
 
 impl ShutdownActor {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn new(tx: Arc<Mutex<Option<oneshot::Sender<()>>>>) -> Self {
         ShutdownActor { tx }
     }
@@ -995,7 +995,7 @@ impl ShutdownActor {
 impl Actor for ShutdownActor {
     type Msg = SystemEvent;
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn pre_start(&mut self, ctx: &Context<Self::Msg>) {
         let sub = Subscribe {
             topic: SysTopic::ActorTerminated.into(),
@@ -1014,7 +1014,7 @@ impl Actor for ShutdownActor {
         ctx.system.stop(ctx.system.user_root());
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn sys_recv(
         &mut self,
         ctx: &Context<Self::Msg>,
@@ -1028,14 +1028,14 @@ impl Actor for ShutdownActor {
         }
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn recv(&mut self, _: &Context<Self::Msg>, _: Self::Msg, _: Option<BasicActorRef>) {}
 }
 
 impl Receive<ActorTerminated> for ShutdownActor {
     type Msg = SystemEvent;
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn receive(
         &mut self,
         ctx: &Context<Self::Msg>,

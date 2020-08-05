@@ -71,7 +71,7 @@ pub struct OnceJob {
 }
 
 impl OnceJob {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn send(mut self) {
         let _ = self.receiver.try_tell_any(&mut self.msg, self.sender);
     }
@@ -88,7 +88,7 @@ pub struct RepeatJob {
 }
 
 impl RepeatJob {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn send(&mut self) {
         let _ = self
             .receiver
@@ -104,7 +104,7 @@ pub struct BasicTimer {
 }
 
 impl BasicTimer {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn start(cfg: &Config) -> TimerRef {
         let cfg = BasicTimerConfig::from(cfg);
 
@@ -132,7 +132,7 @@ impl BasicTimer {
         tx
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn execute_once_jobs(&mut self) {
         let (send, keep): (Vec<OnceJob>, Vec<OnceJob>) = self
             .once_jobs
@@ -150,7 +150,7 @@ impl BasicTimer {
         }
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn execute_repeat_jobs(&mut self) {
         for job in self.repeat_jobs.iter_mut() {
             if Instant::now() >= job.send_at {
@@ -160,7 +160,7 @@ impl BasicTimer {
         }
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn cancel(&mut self, id: &Uuid) {
         // slightly sub optimal way of canceling because we don't know the job type
         // so need to do the remove on both vecs
@@ -174,7 +174,7 @@ impl BasicTimer {
         }
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn schedule_once(&mut self, job: OnceJob) {
         if Instant::now() >= job.send_at {
             job.send();
@@ -183,7 +183,7 @@ impl BasicTimer {
         }
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn schedule_repeat(&mut self, mut job: RepeatJob) {
         if Instant::now() >= job.send_at {
             job.send();
@@ -197,7 +197,7 @@ struct BasicTimerConfig {
 }
 
 impl<'a> From<&'a Config> for BasicTimerConfig {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn from(config: &Config) -> Self {
         BasicTimerConfig {
             frequency_millis: config.get_int("scheduler.frequency_millis").unwrap() as u64,

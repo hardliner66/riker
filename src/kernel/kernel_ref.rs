@@ -18,27 +18,27 @@ pub struct KernelRef {
 }
 
 impl KernelRef {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub(crate) fn schedule(&self, sys: &ActorSystem) {
         self.send(KernelMsg::RunActor, sys);
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub(crate) fn restart(&self, sys: &ActorSystem) {
         self.send(KernelMsg::RestartActor, sys);
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub(crate) fn terminate(&self, sys: &ActorSystem) {
         self.send(KernelMsg::TerminateActor, sys);
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub(crate) fn sys_init(&self, sys: &ActorSystem) {
         self.send(KernelMsg::Sys(sys.clone()), sys);
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn send(&self, msg: KernelMsg, sys: &ActorSystem) {
         let mut tx = self.tx.clone();
         sys.exec
@@ -49,7 +49,7 @@ impl KernelRef {
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(mbox)))]
+#[cfg_attr(feature = "profiling", optick_attr::profile)]
 pub fn dispatch<Msg>(
     msg: Envelope<Msg>,
     mbox: &MailboxSender<Msg>,
@@ -72,7 +72,7 @@ where
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(mbox)))]
+#[cfg_attr(feature = "profiling", optick_attr::profile)]
 pub fn dispatch_any(
     msg: &mut AnyMessage,
     sender: crate::actor::Sender,

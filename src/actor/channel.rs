@@ -26,7 +26,7 @@ pub struct Channel<Msg: Message> {
 }
 
 impl<Msg: Message> Default for Channel<Msg> {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn default() -> Self {
         Channel {
             subs: HashMap::new(),
@@ -41,7 +41,7 @@ where
     type Msg = ChannelMsg<Msg>;
 
     // todo subscribe to events to unsub subscribers when they die
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn pre_start(&mut self, ctx: &ChannelCtx<Msg>) {
         // let sub = Subscribe {
         //     topic: SysTopic::ActorTerminated.into(),
@@ -52,7 +52,7 @@ where
         // ctx.myself.tell(msg, None);
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn recv(&mut self, ctx: &ChannelCtx<Msg>, msg: ChannelMsg<Msg>, sender: Sender) {
         self.receive(ctx, msg, sender);
     }
@@ -60,7 +60,7 @@ where
     // We expect to receive ActorTerminated messages because we subscribed
     // to this system event. This allows us to remove actors that have been
     // terminated but did not explicity unsubscribe before terminating.
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn sys_recv(&mut self, _: &ChannelCtx<Msg>, msg: SystemMsg, sender: Sender) {
         if let SystemMsg::Event(evt) = msg {
             if let SystemEvent::ActorTerminated(terminated) = evt {
@@ -80,7 +80,7 @@ where
 {
     type Msg = ChannelMsg<Msg>;
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn receive(&mut self, ctx: &ChannelCtx<Msg>, msg: Self::Msg, sender: Sender) {
         match msg {
             ChannelMsg::Publish(p) => self.receive(ctx, p, sender),
@@ -97,7 +97,7 @@ where
 {
     type Msg = ChannelMsg<Msg>;
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn receive(&mut self, ctx: &ChannelCtx<Msg>, msg: Subscribe<Msg>, sender: Sender) {
         let subs = self.subs.entry(msg.topic).or_default();
         subs.push(msg.actor);
@@ -110,7 +110,7 @@ where
 {
     type Msg = ChannelMsg<Msg>;
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn receive(&mut self, ctx: &ChannelCtx<Msg>, msg: Unsubscribe<Msg>, sender: Sender) {
         unsubscribe(&mut self.subs, &msg.topic, &msg.actor);
     }
@@ -122,7 +122,7 @@ where
 {
     type Msg = ChannelMsg<Msg>;
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn receive(&mut self, ctx: &ChannelCtx<Msg>, msg: UnsubscribeAll<Msg>, sender: Sender) {
         let subs = self.subs.clone();
 
@@ -138,7 +138,7 @@ where
 {
     type Msg = ChannelMsg<Msg>;
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn receive(&mut self, ctx: &ChannelCtx<Msg>, msg: Publish<Msg>, sender: Sender) {
         // send system event to actors subscribed to all topics
         if let Some(subs) = self.subs.get(&All.into()) {
@@ -156,7 +156,7 @@ where
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(actor)))]
+#[cfg_attr(feature = "profiling", optick_attr::profile)]
 fn unsubscribe<Msg>(subs: &mut Subs<Msg>, topic: &Topic, actor: &dyn ActorReference) {
     // Nightly only: self.subs.get(msg_type).unwrap().remove_item(actor);
     if subs.contains_key(topic) {
@@ -178,12 +178,12 @@ pub struct EventsChannel(Channel<SystemEvent>);
 impl Actor for EventsChannel {
     type Msg = ChannelMsg<SystemEvent>;
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn pre_start(&mut self, ctx: &ChannelCtx<SystemEvent>) {
         self.0.pre_start(ctx);
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn recv(
         &mut self,
         ctx: &ChannelCtx<SystemEvent>,
@@ -193,7 +193,7 @@ impl Actor for EventsChannel {
         self.receive(ctx, msg, sender);
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn sys_recv(&mut self, ctx: &ChannelCtx<SystemEvent>, msg: SystemMsg, sender: Sender) {
         self.0.sys_recv(ctx, msg, sender);
     }
@@ -202,7 +202,7 @@ impl Actor for EventsChannel {
 impl Receive<ChannelMsg<SystemEvent>> for EventsChannel {
     type Msg = ChannelMsg<SystemEvent>;
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn receive(&mut self, ctx: &ChannelCtx<SystemEvent>, msg: Self::Msg, sender: Sender) {
         // Publish variant uses specialized EventsChannel Receive
         // All other variants use the wrapped Channel (self.0) Receive(s)
@@ -218,7 +218,7 @@ impl Receive<ChannelMsg<SystemEvent>> for EventsChannel {
 impl Receive<Publish<SystemEvent>> for EventsChannel {
     type Msg = ChannelMsg<SystemEvent>;
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn receive(
         &mut self,
         ctx: &ChannelCtx<SystemEvent>,
@@ -293,7 +293,7 @@ pub enum ChannelMsg<Msg: Message> {
 
 // publish
 impl<Msg: Message> Into<ChannelMsg<Msg>> for Publish<Msg> {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn into(self) -> ChannelMsg<Msg> {
         ChannelMsg::Publish(self)
     }
@@ -301,7 +301,7 @@ impl<Msg: Message> Into<ChannelMsg<Msg>> for Publish<Msg> {
 
 // subscribe
 impl<Msg: Message> Into<ChannelMsg<Msg>> for Subscribe<Msg> {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn into(self) -> ChannelMsg<Msg> {
         ChannelMsg::Subscribe(self)
     }
@@ -309,7 +309,7 @@ impl<Msg: Message> Into<ChannelMsg<Msg>> for Subscribe<Msg> {
 
 // unsubscribe
 impl<Msg: Message> Into<ChannelMsg<Msg>> for Unsubscribe<Msg> {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn into(self) -> ChannelMsg<Msg> {
         ChannelMsg::Unsubscribe(self)
     }
@@ -317,7 +317,7 @@ impl<Msg: Message> Into<ChannelMsg<Msg>> for Unsubscribe<Msg> {
 
 // unsubscribe
 impl<Msg: Message> Into<ChannelMsg<Msg>> for UnsubscribeAll<Msg> {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn into(self) -> ChannelMsg<Msg> {
         ChannelMsg::UnsubscribeAll(self)
     }
@@ -330,21 +330,21 @@ impl<Msg: Message> Into<ChannelMsg<Msg>> for UnsubscribeAll<Msg> {
 pub struct Topic(String);
 
 impl<'a> From<&'a str> for Topic {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn from(topic: &str) -> Self {
         Topic(topic.to_string())
     }
 }
 
 impl From<String> for Topic {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn from(topic: String) -> Self {
         Topic(topic)
     }
 }
 
 impl<'a> From<&'a SystemEvent> for Topic {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn from(evt: &SystemEvent) -> Self {
         match *evt {
             SystemEvent::ActorCreated(_) => Topic::from("actor.created"),
@@ -359,7 +359,7 @@ impl<'a> From<&'a SystemEvent> for Topic {
 pub struct All;
 
 impl From<All> for Topic {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn from(all: All) -> Self {
         Topic::from("*")
     }
@@ -374,7 +374,7 @@ pub enum SysTopic {
 }
 
 impl From<SysTopic> for Topic {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn from(evt: SysTopic) -> Self {
         match evt {
             SysTopic::ActorCreated => Topic::from("actor.created"),
@@ -384,7 +384,7 @@ impl From<SysTopic> for Topic {
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(fact)))]
+#[cfg_attr(feature = "profiling", optick_attr::profile)]
 pub fn channel<Msg>(name: &str, fact: &impl ActorRefFactory) -> Result<ChannelRef<Msg>, CreateError>
 where
     Msg: Message,

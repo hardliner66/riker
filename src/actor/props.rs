@@ -45,7 +45,7 @@ impl Props {
     /// let actor = sys.actor_of_props("user", props).unwrap();
     /// ```
     #[inline]
-    #[cfg_attr(feature = "profiling", instrument(skip(creator)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn new_from<A, F>(creator: F) -> Arc<Mutex<impl ActorProducer<Actor = A>>>
     where
         A: Actor + Send + 'static,
@@ -116,7 +116,7 @@ impl Props {
     /// let actor = sys.actor_of_props("bank_account", props).unwrap();
     /// ```
     #[inline]
-    #[cfg_attr(feature = "profiling", instrument(skip(creator, args)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn new_from_args<A, Args, F>(
         creator: F,
         args: Args,
@@ -179,7 +179,7 @@ impl Props {
     /// let actor = sys.actor_of_props("user", props).unwrap();
     /// ```
     #[inline]
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn new<A>() -> Arc<Mutex<impl ActorProducer<Actor = A>>>
     where
         A: ActorFactory,
@@ -249,7 +249,7 @@ impl Props {
     /// let actor = sys.actor_of_props("bank_account", props).unwrap();
     /// ```
     #[inline]
-    #[cfg_attr(feature = "profiling", instrument(skip(args)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn new_args<A, Args>(args: Args) -> Arc<Mutex<impl ActorProducer<Actor = A>>>
     where
         A: ActorFactoryArgs<Args>,
@@ -273,7 +273,7 @@ pub trait ActorFactoryArgs<Args: ActorArgs>: Actor {
 
 impl<A: Default + Actor> ActorFactory for A {
     #[inline]
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn create() -> Self {
         A::default()
     }
@@ -310,7 +310,7 @@ where
 {
     type Actor = A;
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn produce(&self) -> A {
         self.lock().unwrap().produce()
     }
@@ -322,7 +322,7 @@ where
 {
     type Actor = A;
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn produce(&self) -> A {
         self.lock().unwrap().produce()
     }
@@ -334,7 +334,7 @@ where
 {
     type Actor = A;
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn produce(&self) -> A {
         (**self).produce()
     }
@@ -351,7 +351,7 @@ impl<A> ActorProps<A>
 where
     A: Actor + Send + 'static,
 {
-    #[cfg_attr(feature = "profiling", instrument(skip(creator)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn new<F>(creator: F) -> impl ActorProducer<Actor = A>
     where
         F: Fn() -> A + Send + 'static,
@@ -368,7 +368,7 @@ where
 {
     type Actor = A;
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn produce(&self) -> A {
         let f = &self.creator;
         f()
@@ -376,14 +376,14 @@ where
 }
 
 impl<A: Actor> fmt::Display for ActorProps<A> {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Props")
     }
 }
 
 impl<A: Actor> fmt::Debug for ActorProps<A> {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Props")
     }
@@ -402,7 +402,7 @@ where
     A: Actor + Send + 'static,
     Args: ActorArgs,
 {
-    #[cfg_attr(feature = "profiling", instrument(skip(creator, args)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn new<F>(creator: F, args: Args) -> impl ActorProducer<Actor = A>
     where
         F: Fn(Args) -> A + Send + 'static,
@@ -421,7 +421,7 @@ where
 {
     type Actor = A;
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn produce(&self) -> A {
         let f = &self.creator;
         let args = self.args.clone();
@@ -430,14 +430,14 @@ where
 }
 
 impl<A: Actor, Args: ActorArgs> fmt::Display for ActorPropsWithArgs<A, Args> {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Props")
     }
 }
 
 impl<A: Actor, Args: ActorArgs> fmt::Debug for ActorPropsWithArgs<A, Args> {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Props")
     }
