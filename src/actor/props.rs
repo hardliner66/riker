@@ -44,7 +44,7 @@ impl Props {
     /// // start the actor and get an `ActorRef`
     /// let actor = sys.actor_of_props("user", props).unwrap();
     /// ```
-    #[inline]
+    #[cfg_attr(not(profiling), inline)]
     #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn new_from<A, F>(creator: F) -> Arc<Mutex<impl ActorProducer<Actor = A>>>
     where
@@ -115,7 +115,7 @@ impl Props {
     /// // start the actor and get an `ActorRef`
     /// let actor = sys.actor_of_props("bank_account", props).unwrap();
     /// ```
-    #[inline]
+    #[cfg_attr(not(profiling), inline)]
     #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn new_from_args<A, Args, F>(
         creator: F,
@@ -178,7 +178,7 @@ impl Props {
     /// // start the actor and get an `ActorRef`
     /// let actor = sys.actor_of_props("user", props).unwrap();
     /// ```
-    #[inline]
+    #[cfg_attr(not(profiling), inline)]
     #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn new<A>() -> Arc<Mutex<impl ActorProducer<Actor = A>>>
     where
@@ -248,7 +248,7 @@ impl Props {
     /// // start the actor and get an `ActorRef`
     /// let actor = sys.actor_of_props("bank_account", props).unwrap();
     /// ```
-    #[inline]
+    #[cfg_attr(not(profiling), inline)]
     #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn new_args<A, Args>(args: Args) -> Arc<Mutex<impl ActorProducer<Actor = A>>>
     where
@@ -272,7 +272,7 @@ pub trait ActorFactoryArgs<Args: ActorArgs>: Actor {
 }
 
 impl<A: Default + Actor> ActorFactory for A {
-    #[inline]
+    #[cfg_attr(not(profiling), inline)]
     #[cfg_attr(feature = "profiling", optick_attr::profile)]
     fn create() -> Self {
         A::default()

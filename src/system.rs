@@ -556,7 +556,7 @@ impl ActorSystem {
             .create_actor(Props::new_args::<A, _>(args), name, &self.sys_root(), self)
     }
 
-    #[inline]
+    #[cfg_attr(not(profiling), inline)]
     #[cfg_attr(feature = "profiling", optick_attr::profile)]
     pub fn log(&self) -> LoggingSystem {
         self.log.clone()
