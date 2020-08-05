@@ -49,6 +49,7 @@ struct ActorCellInner {
 
 impl ActorCell {
     /// Constructs a new `ActorCell`
+    #[cfg_attr(feature = "profiling", instrument(skip(sys_mailbox, mailbox)))]
     pub(crate) fn new(
         uri: ActorUri,
         parent: Option<BasicActorRef>,
@@ -56,6 +57,8 @@ impl ActorCell {
         mailbox: Arc<dyn AnySender>,
         sys_mailbox: MailboxSender<SystemMsg>,
     ) -> ActorCell {
+        let span = tracing::trace_span!("ActorCell::new");
+        let _guard = span.enter();
         ActorCell {
             inner: Arc::new(ActorCellInner {
                 uri,
@@ -73,7 +76,10 @@ impl ActorCell {
         }
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn init(self, kernel: &KernelRef) -> ActorCell {
+        let span = tracing::span!(tracing::Level::TRACE, "ActorCell::init");
+        let _guard = span.enter();
         let inner = ActorCellInner {
             kernel: Some(kernel.clone()),
             ..self.inner.deref().clone()
@@ -84,42 +90,54 @@ impl ActorCell {
         }
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn kernel(&self) -> &KernelRef {
+        let span = tracing::span!(tracing::Level::TRACE, "ActorCell::kernel");
+        let _guard = span.enter();
         self.inner.kernel.as_ref().unwrap()
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn myself(&self) -> BasicActorRef {
         BasicActorRef { cell: self.clone() }
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn uri(&self) -> &ActorUri {
         &self.inner.uri
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn parent(&self) -> BasicActorRef {
         self.inner.parent.as_ref().unwrap().clone()
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn has_children(&self) -> bool {
         self.inner.children.len() > 0
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn children<'a>(&'a self) -> Box<dyn Iterator<Item = BasicActorRef> + 'a> {
         Box::new(self.inner.children.iter())
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn user_root(&self) -> BasicActorRef {
         self.inner.system.user_root().clone()
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn is_root(&self) -> bool {
         self.myself().path() == "/"
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn is_user(&self) -> bool {
         self.inner.system.user_root().is_child(&self.myself())
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn send_any_msg(
         &self,
         msg: &mut AnyMessage,
@@ -131,6 +149,7 @@ impl ActorCell {
         dispatch_any(msg, sender, mb, k, &self.inner.system)
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn send_sys_msg(&self, msg: Envelope<SystemMsg>) -> MsgResult<Envelope<SystemMsg>> {
         let mb = &self.inner.sys_mailbox;
 
@@ -138,22 +157,27 @@ impl ActorCell {
         dispatch(msg, mb, k, &self.inner.system)
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn is_child(&self, actor: &BasicActorRef) -> bool {
         self.inner.children.iter().any(|child| child == *actor)
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn stop(&self, actor: &BasicActorRef) {
         actor.sys_tell(SystemCmd::Stop.into());
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn add_child(&self, actor: BasicActorRef) {
         self.inner.children.add(actor);
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn remove_child(&self, actor: &BasicActorRef) {
         self.inner.children.remove(actor)
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(actor)))]
     pub fn receive_cmd<A: Actor>(&self, cmd: SystemCmd, actor: &mut Option<A>) {
         match cmd {
             SystemCmd::Stop => self.terminate(actor),
@@ -161,6 +185,7 @@ impl ActorCell {
         }
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(actor)))]
     pub fn terminate<A: Actor>(&self, actor: &mut Option<A>) {
         // *1. Suspend non-system mailbox messages
         // *2. Iterate all children and send Stop to each
@@ -178,6 +203,7 @@ impl ActorCell {
         }
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn restart(&self) {
         if !self.has_children() {
             self.kernel().restart(&self.inner.system);
@@ -189,6 +215,7 @@ impl ActorCell {
         }
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(actor)))]
     pub fn death_watch<A: Actor>(&self, terminated: &BasicActorRef, actor: &mut Option<A>) {
         if self.is_child(&terminated) {
             self.remove_child(terminated);
@@ -209,6 +236,7 @@ impl ActorCell {
         }
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn handle_failure(&self, failed: BasicActorRef, strategy: Strategy) {
         match strategy {
             Strategy::Stop => self.stop(&failed),
@@ -217,10 +245,12 @@ impl ActorCell {
         }
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn restart_child(&self, actor: &BasicActorRef) {
         actor.sys_tell(SystemCmd::Restart.into());
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn escalate_failure(&self) {
         self.inner
             .parent
@@ -231,18 +261,21 @@ impl ActorCell {
 }
 
 impl<Msg: Message> From<ExtendedCell<Msg>> for ActorCell {
+    #[cfg_attr(feature = "profiling", instrument)]
     fn from(cell: ExtendedCell<Msg>) -> Self {
         cell.cell
     }
 }
 
 impl fmt::Debug for ActorCell {
+    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "ActorCell[{:?}]", self.uri())
     }
 }
 
 impl TmpActorRefFactory for ActorCell {
+    #[cfg_attr(feature = "profiling", instrument)]
     fn tmp_actor_of_props<A: Actor>(
         &self,
         _props: BoxActorProd<A>,
@@ -256,6 +289,7 @@ impl TmpActorRefFactory for ActorCell {
         unimplemented!()
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     fn tmp_actor_of<A: ActorFactory>(&self) -> Result<ActorRef<<A as Actor>::Msg>, CreateError> {
         let name = rand::random::<u64>();
         let _name = format!("{}", name);
@@ -266,6 +300,7 @@ impl TmpActorRefFactory for ActorCell {
         unimplemented!()
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(_args)))]
     fn tmp_actor_of_args<A, Args>(
         &self,
         _args: Args,
@@ -294,6 +329,10 @@ impl<Msg> ExtendedCell<Msg>
 where
     Msg: Message,
 {
+    #[cfg_attr(
+        feature = "profiling",
+        instrument(skip(any_mailbox, sys_mailbox, mailbox))
+    )]
     pub(crate) fn new(
         uri: ActorUri,
         parent: Option<BasicActorRef>,
@@ -321,48 +360,59 @@ where
         ExtendedCell { cell, mailbox }
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn init(self, kernel: &KernelRef) -> Self {
         let cell = self.cell.init(kernel);
 
         ExtendedCell { cell, ..self }
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn myself(&self) -> ActorRef<Msg> {
         self.cell.myself().typed(self.clone())
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn uri(&self) -> &ActorUri {
         self.cell.uri()
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn parent(&self) -> BasicActorRef {
         self.cell.parent()
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn has_children(&self) -> bool {
         self.cell.has_children()
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn is_child(&self, actor: &BasicActorRef) -> bool {
         self.cell.is_child(actor)
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn children<'a>(&'a self) -> Box<dyn Iterator<Item = BasicActorRef> + 'a> {
         self.cell.children()
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn user_root(&self) -> BasicActorRef {
         self.cell.user_root()
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn is_root(&self) -> bool {
         self.cell.is_root()
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn is_user(&self) -> bool {
         self.cell.is_user()
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn send_msg(&self, msg: Envelope<Msg>) -> MsgResult<Envelope<Msg>> {
         let mb = &self.mailbox;
         let k = self.cell.kernel();
@@ -387,6 +437,7 @@ where
         })
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn send_sys_msg(&self, msg: Envelope<SystemMsg>) -> MsgResult<Envelope<SystemMsg>> {
         self.cell.send_sys_msg(msg)
     }
@@ -395,25 +446,30 @@ where
         &self.cell.inner.system
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn handle_failure(&self, failed: BasicActorRef, strategy: Strategy) {
         self.cell.handle_failure(failed, strategy)
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(actor)))]
     pub(crate) fn receive_cmd<A: Actor>(&self, cmd: SystemCmd, actor: &mut Option<A>) {
         self.cell.receive_cmd(cmd, actor)
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(actor)))]
     pub(crate) fn death_watch<A: Actor>(&self, terminated: &BasicActorRef, actor: &mut Option<A>) {
         self.cell.death_watch(terminated, actor)
     }
 }
 
 impl<Msg: Message> fmt::Debug for ExtendedCell<Msg> {
+    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "ExtendedCell[{:?}]", self.uri())
     }
 }
 
+#[cfg_attr(feature = "profiling", instrument(skip(actor)))]
 fn post_stop<A: Actor>(actor: &mut Option<A>) {
     // If the actor instance exists we can execute post_stop.
     // The instance will be None if this is an actor that has failed
@@ -445,6 +501,7 @@ impl<Msg> Context<Msg>
 where
     Msg: Message,
 {
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     /// Returns the `ActorRef` of the current actor.
     pub fn myself(&self) -> ActorRef<Msg> {
         self.myself.clone()
@@ -452,6 +509,7 @@ where
 }
 
 impl<Msg: Message> ActorRefFactory for Context<Msg> {
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn actor_of_props<A>(
         &self,
         name: &str,
@@ -465,6 +523,7 @@ impl<Msg: Message> ActorRefFactory for Context<Msg> {
             .create_actor(props, name, &self.myself().into(), &self.system)
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn actor_of<A>(&self, name: &str) -> Result<ActorRef<<A as Actor>::Msg>, CreateError>
     where
         A: ActorFactory,
@@ -477,6 +536,7 @@ impl<Msg: Message> ActorRefFactory for Context<Msg> {
         )
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self, args)))]
     fn actor_of_args<A, Args>(
         &self,
         name: &str,
@@ -494,6 +554,7 @@ impl<Msg: Message> ActorRefFactory for Context<Msg> {
         )
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self, actor)))]
     fn stop(&self, actor: impl ActorReference) {
         actor.sys_tell(SystemCmd::Stop.into());
     }
@@ -503,6 +564,7 @@ impl<Msg> ActorSelectionFactory for Context<Msg>
 where
     Msg: Message,
 {
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn select(&self, path: &str) -> Result<ActorSelection, InvalidPath> {
         let (anchor, path_str) = if path.starts_with('/') {
             let anchor = self.system.user_root().clone();
@@ -525,6 +587,7 @@ impl<Msg> Run for Context<Msg>
 where
     Msg: Message,
 {
+    #[cfg_attr(feature = "profiling", instrument(skip(self, future)))]
     fn run<Fut>(&self, future: Fut) -> Result<RemoteHandle<<Fut as Future>::Output>, SpawnError>
     where
         Fut: Future + Send + 'static,
@@ -538,6 +601,7 @@ impl<Msg> Timer for Context<Msg>
 where
     Msg: Message,
 {
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn schedule<T, M>(
         &self,
         initial_delay: Duration,
@@ -566,6 +630,7 @@ where
         id
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn schedule_once<T, M>(
         &self,
         delay: Duration,
@@ -592,6 +657,7 @@ where
         id
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn schedule_at_time<T, M>(
         &self,
         time: DateTime<Utc>,
@@ -621,6 +687,7 @@ where
         id
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn cancel_schedule(&self, id: Uuid) {
         let _ = self.system.timer.send(Job::Cancel(id));
     }
@@ -632,24 +699,29 @@ pub struct Children {
 }
 
 impl Children {
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn new() -> Children {
         Children {
             actors: Arc::new(DashMap::new()),
         }
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn add(&self, actor: BasicActorRef) {
         self.actors.insert(actor.name().to_string(), actor);
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn remove(&self, actor: &BasicActorRef) {
         self.actors.remove(actor.name());
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn len(&self) -> usize {
         self.actors.len()
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn iter(&self) -> ChildrenIterator {
         ChildrenIterator {
             children: self.actors.iter(),
@@ -664,6 +736,7 @@ pub struct ChildrenIterator {
 impl Iterator for ChildrenIterator {
     type Item = BasicActorRef;
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn next(&mut self) -> Option<Self::Item> {
         self.children.next().map(|e| e.value().clone())
     }

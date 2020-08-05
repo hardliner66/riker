@@ -40,6 +40,7 @@ pub struct ActorSelection {
 }
 
 impl ActorSelection {
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn new(
         anchor: BasicActorRef,
         // dl: &BasicActorRef,
@@ -66,10 +67,12 @@ impl ActorSelection {
         })
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(sender)))]
     pub fn try_tell<Msg>(&self, msg: Msg, sender: impl Into<Option<BasicActorRef>>)
     where
         Msg: Message,
     {
+        #[cfg_attr(feature = "profiling", instrument(skip(path_vec)))]
         fn walk<'a, I, Msg>(
             anchor: &BasicActorRef,
             // dl: &BasicActorRef,
@@ -130,7 +133,9 @@ impl ActorSelection {
         );
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(sender)))]
     pub fn sys_tell(&self, msg: SystemMsg, sender: impl Into<Option<BasicActorRef>>) {
+        #[cfg_attr(feature = "profiling", instrument(skip(path_vec)))]
         fn walk<'a, I>(
             anchor: &BasicActorRef,
             // dl: &BasicActorRef,

@@ -27,7 +27,13 @@ slog-stdlog = "4.0"
 slog-scope = "4.3.0"
 num_cpus = "1.13.0"
 dashmap = "4.0.0-rc5"
+tracing = { version = "0.1.18", optional = true }
+tracing-attributes = { version = "0.1.9", optional = true }
 
 [dev-dependencies]
 riker-testkit = "0.1.0"
 log = "0.4"
+
+[features]
+default = [ "profiling" ]
+profiling = [ "tracing", "tracing-attributes" ]

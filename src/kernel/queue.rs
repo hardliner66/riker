@@ -5,6 +5,7 @@ use std::sync::{
 
 use crate::{Envelope, Message};
 
+#[cfg_attr(feature = "profiling", instrument)]
 pub fn queue<Msg: Message>() -> (QueueWriter<Msg>, QueueReader<Msg>) {
     let (tx, rx) = channel::<Envelope<Msg>>();
 
@@ -28,6 +29,7 @@ pub struct QueueWriter<Msg: Message> {
 }
 
 impl<Msg: Message> QueueWriter<Msg> {
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn try_enqueue(&self, msg: Envelope<Msg>) -> EnqueueResult<Msg> {
         self.tx
             .send(msg)
@@ -47,6 +49,7 @@ struct QueueReaderInner<Msg: Message> {
 
 impl<Msg: Message> QueueReader<Msg> {
     #[allow(dead_code)]
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn dequeue(&self) -> Envelope<Msg> {
         let mut inner = self.inner.lock().unwrap();
         if let Some(item) = inner.next_item.take() {
@@ -56,6 +59,7 @@ impl<Msg: Message> QueueReader<Msg> {
         }
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn try_dequeue(&self) -> DequeueResult<Envelope<Msg>> {
         let mut inner = self.inner.lock().unwrap();
         if let Some(item) = inner.next_item.take() {
@@ -65,6 +69,7 @@ impl<Msg: Message> QueueReader<Msg> {
         }
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn has_msgs(&self) -> bool {
         let mut inner = self.inner.lock().unwrap();
         inner.next_item.is_some() || {

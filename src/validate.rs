@@ -2,6 +2,7 @@ use regex::Regex;
 use std::error::Error;
 use std::fmt;
 
+#[cfg_attr(feature = "profiling", instrument)]
 pub fn validate_name(name: &str) -> Result<(), InvalidName> {
     let rgx = Regex::new(r"^[a-zA-Z0-9_-]+$").unwrap();
     if !rgx.is_match(name) {
@@ -16,23 +17,27 @@ pub struct InvalidName {
 }
 
 impl Error for InvalidName {
+    #[cfg_attr(feature = "profiling", instrument)]
     fn description(&self) -> &str {
         "Invalid name. Must contain only a-Z, 0-9, _, or -"
     }
 }
 
 impl fmt::Display for InvalidName {
+    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(&format!("\"{}\". {}", self.name, self.to_string()))
     }
 }
 
 impl fmt::Debug for InvalidName {
+    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(&format!("\"{}\". {}", self.name, self.to_string()))
     }
 }
 
+#[cfg_attr(feature = "profiling", instrument)]
 pub fn validate_path(path: &str) -> Result<(), InvalidPath> {
     let rgx = Regex::new(r"^[a-zA-Z0-9/*._-]+$").unwrap();
     if !rgx.is_match(path) {
@@ -47,18 +52,21 @@ pub struct InvalidPath {
 }
 
 impl Error for InvalidPath {
+    #[cfg_attr(feature = "profiling", instrument)]
     fn description(&self) -> &str {
         "Invalid path. Must contain only a-Z, 0-9, /, _, .., - or *"
     }
 }
 
 impl fmt::Display for InvalidPath {
+    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(&format!("\"{}\". {}", self.path, self.to_string()))
     }
 }
 
 impl fmt::Debug for InvalidPath {
+    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(&format!("\"{}\". {}", self.path, self.to_string()))
     }

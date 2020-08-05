@@ -12,28 +12,33 @@ use crate::{
     AnyMessage, Envelope, Message,
 };
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct KernelRef {
     pub tx: Sender<KernelMsg>,
 }
 
 impl KernelRef {
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn schedule(&self, sys: &ActorSystem) {
         self.send(KernelMsg::RunActor, sys);
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn restart(&self, sys: &ActorSystem) {
         self.send(KernelMsg::RestartActor, sys);
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn terminate(&self, sys: &ActorSystem) {
         self.send(KernelMsg::TerminateActor, sys);
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn sys_init(&self, sys: &ActorSystem) {
         self.send(KernelMsg::Sys(sys.clone()), sys);
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     fn send(&self, msg: KernelMsg, sys: &ActorSystem) {
         let mut tx = self.tx.clone();
         sys.exec
@@ -44,6 +49,7 @@ impl KernelRef {
     }
 }
 
+#[cfg_attr(feature = "profiling", instrument(skip(mbox)))]
 pub fn dispatch<Msg>(
     msg: Envelope<Msg>,
     mbox: &MailboxSender<Msg>,
@@ -66,6 +72,7 @@ where
     }
 }
 
+#[cfg_attr(feature = "profiling", instrument(skip(mbox)))]
 pub fn dispatch_any(
     msg: &mut AnyMessage,
     sender: crate::actor::Sender,

@@ -20,6 +20,7 @@ pub struct LoggerConfig {
 }
 
 impl<'a> From<&'a Config> for LoggerConfig {
+    #[cfg_attr(feature = "profiling", instrument)]
     fn from(config: &Config) -> Self {
         LoggerConfig {
             time_fmt: config.get_str("log.time_format").unwrap(),
@@ -39,6 +40,7 @@ impl<'a> From<&'a Config> for LoggerConfig {
     }
 }
 
+#[cfg_attr(feature = "profiling", instrument)]
 pub(crate) fn default_log(cfg: &Config) -> LoggingSystem {
     let cfg = LoggerConfig::from(cfg);
 
@@ -58,6 +60,7 @@ struct DefaultConsoleLogger {
 }
 
 impl DefaultConsoleLogger {
+    #[cfg_attr(feature = "profiling", instrument(skip(cfg)))]
     fn new(cfg: LoggerConfig) -> Self {
         DefaultConsoleLogger { cfg }
     }
@@ -67,6 +70,7 @@ impl Drain for DefaultConsoleLogger {
     type Ok = ();
     type Err = Never;
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self, record)))]
     fn log(&self, record: &Record, _values: &OwnedKVList) -> Result<Self::Ok, Self::Err> {
         let now = chrono::Utc::now();
         let filter_match = self.cfg.filter.iter().any(|f| record.module().contains(f));
@@ -97,6 +101,7 @@ pub struct DeadLetterLogger {
 }
 
 impl ActorFactoryArgs<(ActorRef<ChannelMsg<DeadLetter>>, LoggingSystem)> for DeadLetterLogger {
+    #[cfg_attr(feature = "profiling", instrument(skip(logger)))]
     fn create_args((dl_chan, logger): (ActorRef<ChannelMsg<DeadLetter>>, LoggingSystem)) -> Self {
         DeadLetterLogger { dl_chan, logger }
     }
@@ -105,6 +110,7 @@ impl ActorFactoryArgs<(ActorRef<ChannelMsg<DeadLetter>>, LoggingSystem)> for Dea
 impl Actor for DeadLetterLogger {
     type Msg = DeadLetter;
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
     fn pre_start(&mut self, ctx: &Context<Self::Msg>) {
         let sub = Box::new(ctx.myself());
         self.dl_chan.tell(
@@ -116,6 +122,7 @@ impl Actor for DeadLetterLogger {
         );
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn recv(&mut self, _: &Context<Self::Msg>, msg: Self::Msg, _: Option<BasicActorRef>) {
         info!(
             self.logger,

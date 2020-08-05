@@ -42,6 +42,7 @@ impl<Msg> MailboxSender<Msg>
 where
     Msg: Message,
 {
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn try_enqueue(&self, msg: Envelope<Msg>) -> EnqueueResult<Msg> {
         self.queue.try_enqueue(msg)
     }
@@ -51,10 +52,12 @@ impl<Msg> MailboxSchedule for MailboxSender<Msg>
 where
     Msg: Message,
 {
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn set_scheduled(&self, b: bool) {
         self.scheduled.store(b, Ordering::Relaxed);
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn is_scheduled(&self) -> bool {
         self.scheduled.load(Ordering::Relaxed)
     }
@@ -64,6 +67,7 @@ impl<Msg> AnySender for MailboxSender<Msg>
 where
     Msg: Message,
 {
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn try_any_enqueue(&self, msg: &mut AnyMessage, sender: Sender) -> Result<(), ()> {
         let actual = msg.take()?;
         let msg = Envelope {
@@ -73,10 +77,12 @@ where
         self.try_enqueue(msg).map_err(|_| ())
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn set_sched(&self, b: bool) {
         self.set_scheduled(b)
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn is_sched(&self) -> bool {
         self.is_scheduled()
     }
@@ -100,34 +106,42 @@ pub struct MailboxInner<Msg: Message> {
 
 impl<Msg: Message> Mailbox<Msg> {
     #[allow(dead_code)]
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn dequeue(&self) -> Envelope<Msg> {
         self.inner.queue.dequeue()
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn try_dequeue(&self) -> Result<Envelope<Msg>, QueueEmpty> {
         self.inner.queue.try_dequeue()
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn sys_try_dequeue(&self) -> Result<Envelope<SystemMsg>, QueueEmpty> {
         self.inner.sys_queue.try_dequeue()
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn has_msgs(&self) -> bool {
         self.inner.queue.has_msgs()
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn has_sys_msgs(&self) -> bool {
         self.inner.sys_queue.has_msgs()
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     pub fn set_suspended(&self, b: bool) {
         self.inner.suspended.store(b, Ordering::Relaxed);
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn is_suspended(&self) -> bool {
         self.inner.suspended.load(Ordering::Relaxed)
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn msg_process_limit(&self) -> u32 {
         self.inner.msg_process_limit
     }
@@ -137,15 +151,18 @@ impl<Msg> MailboxSchedule for Mailbox<Msg>
 where
     Msg: Message,
 {
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn set_scheduled(&self, b: bool) {
         self.inner.scheduled.store(b, Ordering::Relaxed);
     }
 
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn is_scheduled(&self) -> bool {
         self.inner.scheduled.load(Ordering::Relaxed)
     }
 }
 
+#[cfg_attr(feature = "profiling", instrument)]
 pub fn mailbox<Msg>(
     msg_process_limit: u32,
 ) -> (MailboxSender<Msg>, MailboxSender<SystemMsg>, Mailbox<Msg>)
@@ -182,6 +199,7 @@ where
     (sender, sys_sender, mailbox)
 }
 
+#[cfg_attr(feature = "profiling", instrument(skip(mbox, ctx, dock)))]
 pub fn run_mailbox<A>(mbox: &Mailbox<A::Msg>, ctx: Context<A::Msg>, dock: &mut Dock<A>)
 where
     A: Actor,
@@ -216,6 +234,7 @@ where
     }
 }
 
+#[cfg_attr(feature = "profiling", instrument(skip(mbox, ctx, actor)))]
 fn process_msgs<A>(
     mbox: &Mailbox<A::Msg>,
     ctx: &Context<A::Msg>,
@@ -246,6 +265,7 @@ fn process_msgs<A>(
     }
 }
 
+#[cfg_attr(feature = "profiling", instrument(skip(mbox, ctx, actor)))]
 fn process_sys_msgs<A>(
     mbox: &Mailbox<A::Msg>,
     ctx: &Context<A::Msg>,
@@ -273,6 +293,7 @@ fn process_sys_msgs<A>(
     }
 }
 
+#[cfg_attr(feature = "profiling", instrument(skip(mbox, ctx, actor)))]
 fn handle_init<A>(
     mbox: &Mailbox<A::Msg>,
     ctx: &Context<A::Msg>,
@@ -296,6 +317,7 @@ fn handle_init<A>(
     actor.as_mut().unwrap().post_start(ctx);
 }
 
+#[cfg_attr(feature = "profiling", instrument(skip(actor)))]
 fn handle_failed<A>(failed: BasicActorRef, cell: &ExtendedCell<A::Msg>, actor: &mut Option<A>)
 where
     A: Actor,
@@ -303,6 +325,7 @@ where
     cell.handle_failure(failed, actor.as_mut().unwrap().supervisor_strategy())
 }
 
+#[cfg_attr(feature = "profiling", instrument(skip(ctx, actor)))]
 fn handle_evt<A>(
     evt: SystemEvent,
     ctx: &Context<A::Msg>,
@@ -333,6 +356,7 @@ impl<'a, Msg> Drop for Sentinel<'a, Msg>
 where
     Msg: Message,
 {
+    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
     fn drop(&mut self) {
         if thread::panicking() {
             // Suspend the mailbox to prevent further message processing
@@ -348,6 +372,7 @@ where
     }
 }
 
+#[cfg_attr(feature = "profiling", instrument(skip(mbox)))]
 pub fn flush_to_deadletters<Msg>(mbox: &Mailbox<Msg>, actor: &BasicActorRef, sys: &ActorSystem)
 where
     Msg: Message,
@@ -375,6 +400,7 @@ pub struct MailboxConfig {
 }
 
 impl<'a> From<&'a Config> for MailboxConfig {
+    #[cfg_attr(feature = "profiling", instrument)]
     fn from(cfg: &Config) -> Self {
         MailboxConfig {
             msg_process_limit: cfg.get_int("mailbox.msg_process_limit").unwrap() as u32,

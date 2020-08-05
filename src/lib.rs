@@ -5,6 +5,10 @@
 #![allow(clippy::new_ret_no_self)]
 #![allow(clippy::large_enum_variant)]
 
+#[cfg(feature = "profiling")]
+#[macro_use]
+extern crate tracing_attributes;
+
 mod validate;
 
 pub mod actor;
@@ -20,6 +24,7 @@ use config::{Config, File};
 
 use crate::actor::BasicActorRef;
 
+#[instrument]
 pub fn load_config() -> Config {
     let mut cfg = Config::new();
 
@@ -65,6 +70,7 @@ pub struct AnyMessage {
 }
 
 impl AnyMessage {
+    #[instrument]
     pub fn new<T>(msg: T, one_time: bool) -> Self
     where
         T: Any + Message,
@@ -75,6 +81,7 @@ impl AnyMessage {
         }
     }
 
+    #[instrument]
     pub fn take<T>(&mut self) -> Result<T, ()>
     where
         T: Any + Message,
@@ -101,12 +108,14 @@ impl AnyMessage {
 }
 
 impl Clone for AnyMessage {
+    #[instrument]
     fn clone(&self) -> Self {
         panic!("Can't clone a message of type `AnyMessage`");
     }
 }
 
 impl Debug for AnyMessage {
+    #[instrument(skip(f))]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str("AnyMessage")
     }
