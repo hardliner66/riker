@@ -89,6 +89,7 @@ where
     let actor_ref = ActorRef::new(cell);
 
     let f = async move {
+        internal_register_thread!("kernel");
         internal_trace_span!("future");
         while let Some(msg) = rx.next().await {
             match msg {

@@ -13,6 +13,11 @@ macro_rules! internal_trace_future {
     };
 }
 
+#[cfg(all(feature = "profiling", not(feature = "optick-profiler")))]
+macro_rules! internal_register_thread {
+    ($name: literal) => {};
+}
+
 #[cfg(all(feature = "profiling", feature = "optick-profiler"))]
 macro_rules! internal_trace_span {
     ($name: literal) => {
@@ -27,6 +32,13 @@ macro_rules! internal_trace_future {
     };
 }
 
+#[cfg(all(feature = "profiling", feature = "optick-profiler"))]
+macro_rules! internal_register_thread {
+    ($name: literal) => {
+        optick::register_thread($name);
+    };
+}
+
 #[cfg(not(feature = "profiling"))]
 macro_rules! internal_trace_span {
     ($name: literal) => {};
@@ -37,4 +49,9 @@ macro_rules! internal_trace_future {
     ($f: expr) => {
         $f
     };
+}
+
+#[cfg(not(feature = "profiling"))]
+macro_rules! internal_register_thread {
+    ($name: literal) => {};
 }

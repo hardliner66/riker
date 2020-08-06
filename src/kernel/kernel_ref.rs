@@ -81,6 +81,7 @@ impl KernelRef {
         let mut tx = self.tx.clone();
         sys.exec
             .spawn(internal_trace_future!(async move {
+                internal_register_thread!("KernelRef::send");
                 internal_trace_span!("future");
                 drop(tx.send(msg).await);
             }))

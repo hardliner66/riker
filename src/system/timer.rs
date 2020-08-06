@@ -135,20 +135,23 @@ impl BasicTimer {
         };
 
         let (tx, rx) = mpsc::channel();
-        thread::spawn(move || loop {
-            internal_trace_span!("timer");
-            process.execute_once_jobs();
-            process.execute_repeat_jobs();
+        thread::spawn(move || {
+            internal_register_thread!("BasicTimer::loop");
+            loop {
+                internal_trace_span!("timer");
+                process.execute_once_jobs();
+                process.execute_repeat_jobs();
 
-            if let Ok(job) = rx.try_recv() {
-                match job {
-                    Job::Cancel(id) => process.cancel(&id),
-                    Job::Once(job) => process.schedule_once(job),
-                    Job::Repeat(job) => process.schedule_repeat(job),
+                if let Ok(job) = rx.try_recv() {
+                    match job {
+                        Job::Cancel(id) => process.cancel(&id),
+                        Job::Once(job) => process.schedule_once(job),
+                        Job::Repeat(job) => process.schedule_repeat(job),
+                    }
                 }
-            }
 
-            thread::sleep(Duration::from_millis(cfg.frequency_millis));
+                thread::sleep(Duration::from_millis(cfg.frequency_millis));
+            }
         });
 
         tx
