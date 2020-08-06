@@ -2,6 +2,9 @@ use std::sync::Arc;
 
 use futures::{channel::mpsc::Sender, task::SpawnExt, SinkExt};
 
+#[cfg(feature = "profiling")]
+use tracing_futures::Instrument;
+
 use crate::{
     actor::{MsgError, MsgResult},
     kernel::{
@@ -42,9 +45,10 @@ impl KernelRef {
     fn send(&self, msg: KernelMsg, sys: &ActorSystem) {
         let mut tx = self.tx.clone();
         sys.exec
-            .spawn(async move {
+            .spawn(internal_trace_future!(async move {
+                internal_trace_span!("future");
                 drop(tx.send(msg).await);
-            })
+            }))
             .unwrap();
     }
 }

@@ -405,14 +405,14 @@ impl ActorSystem {
         self.sys_actors.as_ref().unwrap().user.sys_init(self);
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
     /// Returns the system start date
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn start_date(&self) -> &DateTime<Utc> {
         &self.proto.started_at
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
     /// Returns the number of seconds since the system started
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn uptime(&self) -> u64 {
         let now = Utc::now();
         now.time()
@@ -420,24 +420,24 @@ impl ActorSystem {
             .num_seconds() as u64
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
     /// Returns the hostname used when the system started
     ///
     /// The host is used in actor addressing.
     ///
     /// Currently not used, but will be once system clustering is introduced.
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn host(&self) -> Arc<String> {
         self.proto.host.clone()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
     /// Returns the UUID assigned to the system
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn id(&self) -> Uuid {
         self.proto.id
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
     /// Returns the name of the system
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn name(&self) -> String {
         self.proto.name.clone()
     }

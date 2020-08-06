@@ -7,7 +7,10 @@
 
 #[cfg(feature = "profiling")]
 #[macro_use]
-extern crate tracing_attributes;
+extern crate tracing;
+
+#[macro_use]
+mod profiling;
 
 mod validate;
 
@@ -24,7 +27,7 @@ use config::{Config, File};
 
 use crate::actor::BasicActorRef;
 
-#[instrument]
+#[cfg_attr(feature = "profiling", instrument)]
 pub fn load_config() -> Config {
     let mut cfg = Config::new();
 
@@ -70,7 +73,7 @@ pub struct AnyMessage {
 }
 
 impl AnyMessage {
-    #[instrument]
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn new<T>(msg: T, one_time: bool) -> Self
     where
         T: Any + Message,
@@ -81,7 +84,7 @@ impl AnyMessage {
         }
     }
 
-    #[instrument]
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn take<T>(&mut self) -> Result<T, ()>
     where
         T: Any + Message,
@@ -108,14 +111,14 @@ impl AnyMessage {
 }
 
 impl Clone for AnyMessage {
-    #[instrument]
+    #[cfg_attr(feature = "profiling", instrument)]
     fn clone(&self) -> Self {
         panic!("Can't clone a message of type `AnyMessage`");
     }
 }
 
 impl Debug for AnyMessage {
-    #[instrument(skip(f))]
+    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str("AnyMessage")
     }

@@ -20,6 +20,8 @@ use std::{
 
 use futures::{channel::mpsc::channel, task::SpawnExt, StreamExt};
 use slog::warn;
+#[cfg(feature = "profiling")]
+use tracing_futures::Instrument;
 
 use crate::{
     actor::actor_cell::ExtendedCell,
@@ -73,6 +75,7 @@ where
     let actor_ref = ActorRef::new(cell);
 
     let f = async move {
+        internal_trace_span!("future");
         while let Some(msg) = rx.next().await {
             match msg {
                 KernelMsg::RunActor => {
@@ -100,7 +103,7 @@ where
         }
     };
 
-    sys.exec.spawn(f).unwrap();
+    sys.exec.spawn(internal_trace_future!(f)).unwrap();
     Ok(kr)
 }
 

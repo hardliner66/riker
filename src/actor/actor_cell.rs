@@ -57,8 +57,6 @@ impl ActorCell {
         mailbox: Arc<dyn AnySender>,
         sys_mailbox: MailboxSender<SystemMsg>,
     ) -> ActorCell {
-        let span = tracing::trace_span!("ActorCell::new");
-        let _guard = span.enter();
         ActorCell {
             inner: Arc::new(ActorCellInner {
                 uri,
@@ -78,8 +76,6 @@ impl ActorCell {
 
     #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn init(self, kernel: &KernelRef) -> ActorCell {
-        let span = tracing::span!(tracing::Level::TRACE, "ActorCell::init");
-        let _guard = span.enter();
         let inner = ActorCellInner {
             kernel: Some(kernel.clone()),
             ..self.inner.deref().clone()
@@ -92,8 +88,6 @@ impl ActorCell {
 
     #[cfg_attr(feature = "profiling", instrument)]
     pub(crate) fn kernel(&self) -> &KernelRef {
-        let span = tracing::span!(tracing::Level::TRACE, "ActorCell::kernel");
-        let _guard = span.enter();
         self.inner.kernel.as_ref().unwrap()
     }
 
@@ -442,6 +436,7 @@ where
         self.cell.send_sys_msg(msg)
     }
 
+    #[cfg_attr(feature = "profiling", instrument)]
     pub fn system(&self) -> &ActorSystem {
         &self.cell.inner.system
     }

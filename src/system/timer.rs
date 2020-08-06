@@ -115,6 +115,7 @@ impl BasicTimer {
 
         let (tx, rx) = mpsc::channel();
         thread::spawn(move || loop {
+            internal_trace_span!("timer");
             process.execute_once_jobs();
             process.execute_repeat_jobs();
 
