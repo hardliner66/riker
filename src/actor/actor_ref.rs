@@ -66,12 +66,26 @@ where
     T: Message + Into<M>,
     M: Message,
 {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn tell(&self, msg: T, sender: Sender) {
         self.send_msg(msg.into(), sender);
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn box_clone(&self) -> BoxedTell<T> {
         Box::new((*self).clone())
     }
@@ -84,12 +98,26 @@ where
     /// Actor name.
     ///
     /// Unique among siblings.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn name(&self) -> &str {
         (**self).name()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn uri(&self) -> &ActorUri {
         (**self).uri()
     }
@@ -97,72 +125,156 @@ where
     /// Actor path.
     ///
     /// e.g. `/user/actor_a/actor_b
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn path(&self) -> &ActorPath {
         (**self).path()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn is_root(&self) -> bool {
         (**self).is_root()
     }
 
     /// Parent reference.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn parent(&self) -> BasicActorRef {
         (**self).parent()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn user_root(&self) -> BasicActorRef {
         (**self).user_root()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn has_children(&self) -> bool {
         (**self).has_children()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn is_child(&self, actor: &BasicActorRef) -> bool {
         (**self).is_child(actor)
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     /// Iterator over children references.
     fn children<'a>(&'a self) -> Box<dyn Iterator<Item = BasicActorRef> + 'a> {
         (**self).children()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn sys_tell(&self, msg: SystemMsg) {
         (**self).sys_tell(msg)
     }
 }
 
 impl<T> PartialEq for BoxedTell<T> {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn eq(&self, other: &BoxedTell<T>) -> bool {
         self.path() == other.path()
     }
 }
 
 impl<T> fmt::Debug for BoxedTell<T> {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Tell[{:?}]", self.uri())
     }
 }
 
 impl<T> fmt::Display for BoxedTell<T> {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Tell[{}]", self.uri())
     }
 }
 
 impl<T: 'static> Clone for BoxedTell<T> {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn clone(&self) -> Self {
         self.box_clone()
     }
@@ -189,17 +301,38 @@ pub struct BasicActorRef {
 
 impl BasicActorRef {
     #[doc(hidden)]
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     pub fn new(cell: ActorCell) -> BasicActorRef {
         BasicActorRef { cell }
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     pub fn typed<Msg: Message>(&self, cell: ExtendedCell<Msg>) -> ActorRef<Msg> {
         ActorRef { cell }
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     pub(crate) fn sys_init(&self, sys: &ActorSystem) {
         self.cell.kernel().sys_init(sys);
     }
@@ -207,7 +340,14 @@ impl BasicActorRef {
     /// Send a message to this actor
     ///
     /// Returns a result. If the message type is not supported Error is returned.
-    #[cfg_attr(feature = "profiling", instrument(skip(sender)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(sender))
+    )]
     pub fn try_tell<Msg>(
         &self,
         msg: Msg,
@@ -219,7 +359,14 @@ impl BasicActorRef {
         self.try_tell_any(&mut AnyMessage::new(msg, true), sender)
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(sender)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(sender))
+    )]
     pub fn try_tell_any(
         &self,
         msg: &mut AnyMessage,
@@ -233,12 +380,26 @@ impl ActorReference for BasicActorRef {
     /// Actor name.
     ///
     /// Unique among siblings.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn name(&self) -> &str {
         self.cell.uri().name.as_str()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn uri(&self) -> &ActorUri {
         self.cell.uri()
     }
@@ -246,44 +407,100 @@ impl ActorReference for BasicActorRef {
     /// Actor path.
     ///
     /// e.g. `/user/actor_a/actor_b`
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn path(&self) -> &ActorPath {
         &self.cell.uri().path
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn is_root(&self) -> bool {
         self.cell.is_root()
     }
 
     /// Parent reference.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn parent(&self) -> BasicActorRef {
         self.cell.parent()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn user_root(&self) -> BasicActorRef {
         self.cell.user_root()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn has_children(&self) -> bool {
         self.cell.has_children()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn is_child(&self, actor: &BasicActorRef) -> bool {
         self.cell.is_child(actor)
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     /// Iterator over children references.
     fn children<'a>(&'a self) -> Box<dyn Iterator<Item = BasicActorRef> + 'a> {
         self.cell.children()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn sys_tell(&self, msg: SystemMsg) {
         let envelope = Envelope { msg, sender: None };
         let _ = self.cell.send_sys_msg(envelope);
@@ -294,12 +511,26 @@ impl ActorReference for &BasicActorRef {
     /// Actor name.
     ///
     /// Unique among siblings.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn name(&self) -> &str {
         self.cell.uri().name.as_str()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn uri(&self) -> &ActorUri {
         self.cell.uri()
     }
@@ -307,44 +538,100 @@ impl ActorReference for &BasicActorRef {
     /// Actor path.
     ///
     /// e.g. `/user/actor_a/actor_b`
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn path(&self) -> &ActorPath {
         &self.cell.uri().path
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn is_root(&self) -> bool {
         self.cell.is_root()
     }
 
     /// Parent reference.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn parent(&self) -> BasicActorRef {
         self.cell.parent()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn user_root(&self) -> BasicActorRef {
         self.cell.user_root()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn has_children(&self) -> bool {
         self.cell.has_children()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn is_child(&self, actor: &BasicActorRef) -> bool {
         self.cell.is_child(actor)
     }
 
     /// Iterator over children references.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn children<'a>(&'a self) -> Box<dyn Iterator<Item = BasicActorRef> + 'a> {
         self.cell.children()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn sys_tell(&self, msg: SystemMsg) {
         let envelope = Envelope { msg, sender: None };
         let _ = self.cell.send_sys_msg(envelope);
@@ -352,21 +639,42 @@ impl ActorReference for &BasicActorRef {
 }
 
 impl fmt::Debug for BasicActorRef {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "BasicActorRef[{:?}]", self.cell.uri())
     }
 }
 
 impl fmt::Display for BasicActorRef {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "BasicActorRef[{}]", self.cell.uri())
     }
 }
 
 impl PartialEq for BasicActorRef {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn eq(&self, other: &BasicActorRef) -> bool {
         self.cell.uri().path == other.cell.uri().path
     }
@@ -376,7 +684,14 @@ impl<Msg> From<ActorRef<Msg>> for BasicActorRef
 where
     Msg: Message,
 {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn from(actor: ActorRef<Msg>) -> BasicActorRef {
         BasicActorRef::new(ActorCell::from(actor.cell))
     }
@@ -386,7 +701,14 @@ impl<Msg> From<ActorRef<Msg>> for Option<BasicActorRef>
 where
     Msg: Message,
 {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn from(actor: ActorRef<Msg>) -> Option<BasicActorRef> {
         Some(BasicActorRef::new(ActorCell::from(actor.cell)))
     }
@@ -419,12 +741,26 @@ pub struct ActorRef<Msg: Message> {
 
 impl<Msg: Message> ActorRef<Msg> {
     #[doc(hidden)]
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     pub fn new(cell: ExtendedCell<Msg>) -> ActorRef<Msg> {
         ActorRef { cell }
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(sender)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(sender))
+    )]
     pub fn send_msg(&self, msg: Msg, sender: impl Into<Option<BasicActorRef>>) {
         let envelope = Envelope {
             msg,
@@ -439,12 +775,26 @@ impl<Msg: Message> ActorReference for ActorRef<Msg> {
     /// Actor name.
     ///
     /// Unique among siblings.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn name(&self) -> &str {
         self.cell.uri().name.as_str()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn uri(&self) -> &ActorUri {
         self.cell.uri()
     }
@@ -452,44 +802,100 @@ impl<Msg: Message> ActorReference for ActorRef<Msg> {
     /// Actor path.
     ///
     /// e.g. `/user/actor_a/actor_b`
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn path(&self) -> &ActorPath {
         &self.cell.uri().path
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn is_root(&self) -> bool {
         self.cell.is_root()
     }
 
     /// Parent reference.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn parent(&self) -> BasicActorRef {
         self.cell.parent()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn user_root(&self) -> BasicActorRef {
         self.cell.user_root()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn has_children(&self) -> bool {
         self.cell.has_children()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn is_child(&self, actor: &BasicActorRef) -> bool {
         self.cell.is_child(actor)
     }
 
     /// Iterator over children references.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn children<'a>(&'a self) -> Box<dyn Iterator<Item = BasicActorRef> + 'a> {
         self.cell.children()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn sys_tell(&self, msg: SystemMsg) {
         let envelope = Envelope { msg, sender: None };
         let _ = self.cell.send_sys_msg(envelope);
@@ -500,12 +906,26 @@ impl<Msg: Message> ActorReference for &ActorRef<Msg> {
     /// Actor name.
     ///
     /// Unique among siblings.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn name(&self) -> &str {
         self.cell.uri().name.as_str()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn uri(&self) -> &ActorUri {
         self.cell.uri()
     }
@@ -513,44 +933,100 @@ impl<Msg: Message> ActorReference for &ActorRef<Msg> {
     /// Actor path.
     ///
     /// e.g. `/user/actor_a/actor_b`
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn path(&self) -> &ActorPath {
         &self.cell.uri().path
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn is_root(&self) -> bool {
         self.cell.is_root()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     /// Parent reference.
     fn parent(&self) -> BasicActorRef {
         self.cell.parent()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn user_root(&self) -> BasicActorRef {
         self.cell.user_root()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn has_children(&self) -> bool {
         self.cell.has_children()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn is_child(&self, actor: &BasicActorRef) -> bool {
         self.cell.is_child(actor)
     }
 
     /// Iterator over children references.
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn children<'a>(&'a self) -> Box<dyn Iterator<Item = BasicActorRef> + 'a> {
         self.cell.children()
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn sys_tell(&self, msg: SystemMsg) {
         let envelope = Envelope { msg, sender: None };
         let _ = self.cell.send_sys_msg(envelope);
@@ -558,21 +1034,42 @@ impl<Msg: Message> ActorReference for &ActorRef<Msg> {
 }
 
 impl<Msg: Message> fmt::Debug for ActorRef<Msg> {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "ActorRef[{:?}]", self.uri())
     }
 }
 
 impl<Msg: Message> fmt::Display for ActorRef<Msg> {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "ActorRef[{}]", self.uri())
     }
 }
 
 impl<Msg: Message> PartialEq for ActorRef<Msg> {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn eq(&self, other: &ActorRef<Msg>) -> bool {
         self.uri().path == other.uri().path
     }

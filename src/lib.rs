@@ -27,7 +27,14 @@ use config::{Config, File};
 
 use crate::actor::BasicActorRef;
 
-#[cfg_attr(feature = "profiling", instrument)]
+#[cfg_attr(
+    all(feature = "profiling", feature = "optick-profiler"),
+    optick_attr::profile
+)]
+#[cfg_attr(
+    all(feature = "profiling", not(feature = "optick-profiler")),
+    instrument
+)]
 pub fn load_config() -> Config {
     let mut cfg = Config::new();
 
@@ -73,7 +80,14 @@ pub struct AnyMessage {
 }
 
 impl AnyMessage {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     pub fn new<T>(msg: T, one_time: bool) -> Self
     where
         T: Any + Message,
@@ -84,7 +98,14 @@ impl AnyMessage {
         }
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     pub fn take<T>(&mut self) -> Result<T, ()>
     where
         T: Any + Message,
@@ -111,14 +132,28 @@ impl AnyMessage {
 }
 
 impl Clone for AnyMessage {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn clone(&self) -> Self {
         panic!("Can't clone a message of type `AnyMessage`");
     }
 }
 
 impl Debug for AnyMessage {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str("AnyMessage")
     }

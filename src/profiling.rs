@@ -1,4 +1,4 @@
-#[cfg(feature = "profiling")]
+#[cfg(all(feature = "profiling", not(feature = "optick-profiler")))]
 macro_rules! internal_trace_span {
     ($name: literal) => {
         let span = tracing::trace_span!($name);
@@ -6,10 +6,24 @@ macro_rules! internal_trace_span {
     };
 }
 
-#[cfg(feature = "profiling")]
+#[cfg(all(feature = "profiling", not(feature = "optick-profiler")))]
 macro_rules! internal_trace_future {
     ($f: expr) => {
         $f.in_current_span()
+    };
+}
+
+#[cfg(all(feature = "profiling", feature = "optick-profiler"))]
+macro_rules! internal_trace_span {
+    ($name: literal) => {
+        optick::event!($name);
+    };
+}
+
+#[cfg(all(feature = "profiling", feature = "optick-profiler"))]
+macro_rules! internal_trace_future {
+    ($f: expr) => {
+        $f
     };
 }
 

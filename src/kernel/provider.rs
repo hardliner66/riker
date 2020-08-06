@@ -24,7 +24,14 @@ struct ProviderInner {
 }
 
 impl Provider {
-    #[cfg_attr(feature = "profiling", instrument(skip(log)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(log))
+    )]
     pub fn new(log: LoggingSystem) -> Self {
         let inner = ProviderInner {
             paths: DashMap::new(),
@@ -36,7 +43,14 @@ impl Provider {
         }
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self))
+    )]
     pub fn create_actor<A>(
         &self,
         props: BoxActorProd<A>,
@@ -83,7 +97,14 @@ impl Provider {
         Ok(actor)
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self))
+    )]
     fn register(&self, path: &ActorPath) -> Result<(), CreateError> {
         let old = self.inner.paths.replace(path.clone(), ());
         if old.is_some() {
@@ -93,13 +114,27 @@ impl Provider {
         }
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self))
+    )]
     pub fn unregister(&self, path: &ActorPath) {
         self.inner.paths.remove(path);
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument)]
+#[cfg_attr(
+    all(feature = "profiling", feature = "optick-profiler"),
+    optick_attr::profile
+)]
+#[cfg_attr(
+    all(feature = "profiling", not(feature = "optick-profiler")),
+    instrument
+)]
 pub fn create_root(sys: &ActorSystem) -> SysActors {
     let root = root(sys);
 
@@ -111,7 +146,14 @@ pub fn create_root(sys: &ActorSystem) -> SysActors {
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument)]
+#[cfg_attr(
+    all(feature = "profiling", feature = "optick-profiler"),
+    optick_attr::profile
+)]
+#[cfg_attr(
+    all(feature = "profiling", not(feature = "optick-profiler")),
+    instrument
+)]
 fn root(sys: &ActorSystem) -> BasicActorRef {
     let uri = ActorUri {
         name: Arc::new("root".to_string()),
@@ -163,7 +205,14 @@ fn root(sys: &ActorSystem) -> BasicActorRef {
     BasicActorRef::from(actor_ref)
 }
 
-#[cfg_attr(feature = "profiling", instrument)]
+#[cfg_attr(
+    all(feature = "profiling", feature = "optick-profiler"),
+    optick_attr::profile
+)]
+#[cfg_attr(
+    all(feature = "profiling", not(feature = "optick-profiler")),
+    instrument
+)]
 fn guardian(name: &str, path: &str, root: &BasicActorRef, sys: &ActorSystem) -> BasicActorRef {
     let uri = ActorUri {
         name: Arc::new(name.to_string()),
@@ -200,7 +249,14 @@ struct Guardian {
 }
 
 impl ActorFactoryArgs<(String, LoggingSystem)> for Guardian {
-    #[cfg_attr(feature = "profiling", instrument(skip(log)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(log))
+    )]
     fn create_args((name, log): (String, LoggingSystem)) -> Self {
         Guardian { name, log }
     }
@@ -209,10 +265,24 @@ impl ActorFactoryArgs<(String, LoggingSystem)> for Guardian {
 impl Actor for Guardian {
     type Msg = SystemMsg;
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self))
+    )]
     fn recv(&mut self, _: &Context<Self::Msg>, _: Self::Msg, _: Option<BasicActorRef>) {}
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self))
+    )]
     fn post_stop(&mut self) {
         trace!(self.log, "{} guardian stopped", self.name);
     }

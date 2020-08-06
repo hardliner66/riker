@@ -41,28 +41,56 @@ pub struct MsgError<T> {
 }
 
 impl<T> MsgError<T> {
-    #[cfg_attr(feature = "profiling", instrument(skip(msg)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(msg))
+    )]
     pub fn new(msg: T) -> Self {
         MsgError { msg }
     }
 }
 
 impl<T> Error for MsgError<T> {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn description(&self) -> &str {
         "The actor does not exist. It may have been terminated"
     }
 }
 
 impl<T> fmt::Display for MsgError<T> {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(&self.to_string())
     }
 }
 
 impl<T> fmt::Debug for MsgError<T> {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(&self.to_string())
     }
@@ -74,28 +102,56 @@ pub struct TryMsgError<T> {
 }
 
 impl<T> TryMsgError<T> {
-    #[cfg_attr(feature = "profiling", instrument(skip(msg)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(msg))
+    )]
     pub fn new(msg: T) -> Self {
         TryMsgError { msg }
     }
 }
 
 impl<T> Error for TryMsgError<T> {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn description(&self) -> &str {
         "Option<ActorRef> is None"
     }
 }
 
 impl<T> fmt::Display for TryMsgError<T> {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(&self.to_string())
     }
 }
 
 impl<T> fmt::Debug for TryMsgError<T> {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(&self.to_string())
     }
@@ -111,7 +167,14 @@ pub enum CreateError {
 }
 
 impl Error for CreateError {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn description(&self) -> &str {
         match *self {
             CreateError::Panicked => "Failed to create actor. Cause: Actor panicked while starting",
@@ -125,14 +188,28 @@ impl Error for CreateError {
 }
 
 impl fmt::Display for CreateError {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         fmt::Debug::fmt(self, f)
     }
 }
 
 impl From<InvalidName> for CreateError {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn from(err: InvalidName) -> CreateError {
         CreateError::InvalidName(err.name)
     }
@@ -142,21 +219,42 @@ impl From<InvalidName> for CreateError {
 pub struct RestartError;
 
 impl Error for RestartError {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn description(&self) -> &str {
         "Failed to restart actor. Cause: Actor panicked while starting"
     }
 }
 
 impl fmt::Display for RestartError {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(&self.to_string())
     }
 }
 
 impl fmt::Debug for RestartError {
-    #[cfg_attr(feature = "profiling", instrument(skip(f)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(f))
+    )]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.write_str(&self.to_string())
     }
@@ -172,7 +270,14 @@ pub trait Actor: Send + 'static {
     ///
     /// Panics in `pre_start` do not invoke the
     /// supervision strategy and the actor will be terminated.
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self, ctx))
+    )]
     fn pre_start(&mut self, ctx: &Context<Self::Msg>) {}
 
     /// Invoked after an actor has started.
@@ -181,15 +286,36 @@ pub trait Actor: Send + 'static {
     /// to a log file, emmitting metrics.
     ///
     /// Panics in `post_start` follow the supervision strategy.
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self, ctx))
+    )]
     fn post_start(&mut self, ctx: &Context<Self::Msg>) {}
 
     /// Invoked after an actor has been stopped.
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self))
+    )]
     fn post_stop(&mut self) {}
 
     /// Return a supervisor strategy that will be used when handling failed child actors.
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self))
+    )]
     fn supervisor_strategy(&self) -> Strategy {
         Strategy::Restart
     }
@@ -198,7 +324,14 @@ pub trait Actor: Send + 'static {
     ///
     /// It is guaranteed that only one message in the actor's mailbox is processed
     /// at any one time, including `recv` and `sys_recv`.
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self, ctx))
+    )]
     fn sys_recv(&mut self, ctx: &Context<Self::Msg>, msg: SystemMsg, sender: Sender) {}
 
     /// Invoked when an actor receives a message
@@ -211,22 +344,50 @@ pub trait Actor: Send + 'static {
 impl<A: Actor + ?Sized> Actor for Box<A> {
     type Msg = A::Msg;
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self, ctx))
+    )]
     fn pre_start(&mut self, ctx: &Context<Self::Msg>) {
         (**self).pre_start(ctx);
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self, ctx))
+    )]
     fn post_start(&mut self, ctx: &Context<Self::Msg>) {
         (**self).post_start(ctx)
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self))
+    )]
     fn post_stop(&mut self) {
         (**self).post_stop()
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self, ctx))
+    )]
     fn sys_recv(
         &mut self,
         ctx: &Context<Self::Msg>,
@@ -236,12 +397,26 @@ impl<A: Actor + ?Sized> Actor for Box<A> {
         (**self).sys_recv(ctx, msg, sender)
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self))
+    )]
     fn supervisor_strategy(&self) -> Strategy {
         (**self).supervisor_strategy()
     }
 
-    #[cfg_attr(feature = "profiling", instrument(skip(self, ctx)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self, ctx))
+    )]
     fn recv(&mut self, ctx: &Context<Self::Msg>, msg: Self::Msg, sender: Sender) {
         (**self).recv(ctx, msg, sender)
     }

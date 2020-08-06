@@ -21,27 +21,62 @@ pub struct KernelRef {
 }
 
 impl KernelRef {
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     pub(crate) fn schedule(&self, sys: &ActorSystem) {
         self.send(KernelMsg::RunActor, sys);
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     pub(crate) fn restart(&self, sys: &ActorSystem) {
         self.send(KernelMsg::RestartActor, sys);
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     pub(crate) fn terminate(&self, sys: &ActorSystem) {
         self.send(KernelMsg::TerminateActor, sys);
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     pub(crate) fn sys_init(&self, sys: &ActorSystem) {
         self.send(KernelMsg::Sys(sys.clone()), sys);
     }
 
-    #[cfg_attr(feature = "profiling", instrument)]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument
+    )]
     fn send(&self, msg: KernelMsg, sys: &ActorSystem) {
         let mut tx = self.tx.clone();
         sys.exec
@@ -53,7 +88,14 @@ impl KernelRef {
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(mbox)))]
+#[cfg_attr(
+    all(feature = "profiling", feature = "optick-profiler"),
+    optick_attr::profile
+)]
+#[cfg_attr(
+    all(feature = "profiling", not(feature = "optick-profiler")),
+    instrument(skip(mbox))
+)]
 pub fn dispatch<Msg>(
     msg: Envelope<Msg>,
     mbox: &MailboxSender<Msg>,
@@ -76,7 +118,14 @@ where
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(mbox)))]
+#[cfg_attr(
+    all(feature = "profiling", feature = "optick-profiler"),
+    optick_attr::profile
+)]
+#[cfg_attr(
+    all(feature = "profiling", not(feature = "optick-profiler")),
+    instrument(skip(mbox))
+)]
 pub fn dispatch_any(
     msg: &mut AnyMessage,
     sender: crate::actor::Sender,

@@ -40,7 +40,14 @@ pub struct Dock<A: Actor> {
 }
 
 impl<A: Actor> Clone for Dock<A> {
-    #[cfg_attr(feature = "profiling", instrument(skip(self)))]
+    #[cfg_attr(
+        all(feature = "profiling", feature = "optick-profiler"),
+        optick_attr::profile
+    )]
+    #[cfg_attr(
+        all(feature = "profiling", not(feature = "optick-profiler")),
+        instrument(skip(self))
+    )]
     fn clone(&self) -> Dock<A> {
         Dock {
             actor: self.actor.clone(),
@@ -49,7 +56,14 @@ impl<A: Actor> Clone for Dock<A> {
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(mailbox)))]
+#[cfg_attr(
+    all(feature = "profiling", feature = "optick-profiler"),
+    optick_attr::profile
+)]
+#[cfg_attr(
+    all(feature = "profiling", not(feature = "optick-profiler")),
+    instrument(skip(mailbox))
+)]
 pub fn kernel<A>(
     props: BoxActorProd<A>,
     cell: ExtendedCell<A::Msg>,
@@ -107,7 +121,14 @@ where
     Ok(kr)
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(dock)))]
+#[cfg_attr(
+    all(feature = "profiling", feature = "optick-profiler"),
+    optick_attr::profile
+)]
+#[cfg_attr(
+    all(feature = "profiling", not(feature = "optick-profiler")),
+    instrument(skip(dock))
+)]
 fn restart_actor<A>(
     dock: &Dock<A>,
     actor_ref: BasicActorRef,
@@ -129,7 +150,14 @@ fn restart_actor<A>(
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument(skip(mbox)))]
+#[cfg_attr(
+    all(feature = "profiling", feature = "optick-profiler"),
+    optick_attr::profile
+)]
+#[cfg_attr(
+    all(feature = "profiling", not(feature = "optick-profiler")),
+    instrument(skip(mbox))
+)]
 fn terminate_actor<Msg>(mbox: &Mailbox<Msg>, actor_ref: BasicActorRef, sys: &ActorSystem)
 where
     Msg: Message,
@@ -149,7 +177,14 @@ where
     }
 }
 
-#[cfg_attr(feature = "profiling", instrument)]
+#[cfg_attr(
+    all(feature = "profiling", feature = "optick-profiler"),
+    optick_attr::profile
+)]
+#[cfg_attr(
+    all(feature = "profiling", not(feature = "optick-profiler")),
+    instrument
+)]
 fn start_actor<A>(props: &BoxActorProd<A>) -> Result<A, CreateError>
 where
     A: Actor,
