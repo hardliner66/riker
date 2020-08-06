@@ -1,7 +1,8 @@
 #[cfg(feature = "profiling")]
 macro_rules! internal_trace_span {
     ($name: literal) => {
-        tracing::trace_span!($name);
+        let span = tracing::trace_span!($name);
+        let _enter = span.enter();
     };
 }
 
